@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "checkJs": false,          // stop checking .js files
+    "skipLibCheck": true,      // skip third-party declaration checks
+    "strict": false,           // turn off all strict type-checking options
+    "noEmit": false,           // allow output (Next.js uses SWC under the hood)
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      { "name": "next" }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    },
+    // Memory optimizations
+    "preserveWatchOutput": true,
+    "tsBuildInfoFile": ".next/cache/tsbuildinfo"
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "next.config.ts",
+    "components/tasks/editable/editor/tools/ToolsContainer.tsx"
+  ],
+  "exclude": ["node_modules"]
+}
