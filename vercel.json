@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "next.config.js", "use": "@vercel/next" }
+  ],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/app/api/$1" }
+  ],
+  "redirects": [],
+  "headers": [],
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "DATABASE_URL": "DATABASE_URL",
+    "DIRECT_URL": "DIRECT_URL",
+    "NEXTAUTH_URL": "NEXTAUTH_URL"
+  }
+}
