@@ -42,21 +42,22 @@ export const SignUpCardContent = () => {
     setIsLoading(true);
 
     try {
-      // Use the user service API client
-      const response = await userService.register({
-        email: data.email,
-        password: data.password,
-        username: data.username,
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          username: data.username,
+        }),
       });
-
-      if (!response.success) {
-        throw new Error(response.error || "Registration failed");
+      const response = await res.json();
+      if (!res.ok) {
+        throw new Error(response.message || "Registration failed");
       }
-
       toast({
         title: m("SUCCESS.SIGN_UP"),
       });
-      
       // Auto-login after successful registration
       await signIn("credentials", {
         email: data.email,

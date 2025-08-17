@@ -28,10 +28,6 @@ const useCases = [
     case: "STUDY",
     title: "SECOND_STEP.STUDY",
   },
-  {
-    case: "PERSONAL_USE",
-    title: "SECOND_STEP.PERSONAL",
-  },
 ];
 
 export const SecondStep = () => {

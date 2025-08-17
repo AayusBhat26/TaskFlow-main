@@ -129,7 +129,7 @@ export const MobileNav = () => {
               )}
             </Button>
             <Button
-              className={`${buttonVariants({ variant: "outline" })} disabled:opacity-50`}
+              className={buttonVariants({ variant: "default" })}
               onClick={handleLogin}
               disabled={isLoginLoading}
             >

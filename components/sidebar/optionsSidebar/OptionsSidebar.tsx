@@ -69,7 +69,7 @@ export const OptionsSidebar = ({
         )}
       </ScrollArea>
 
-      <CreatedWorkspacesInfo createdNumber={createdWorkspaces} />
+  {/* Removed workspace count info for notes/dashboard sidebar UI cleanup */}
     </div>
   );
 };

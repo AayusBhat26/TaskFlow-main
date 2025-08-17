@@ -39,21 +39,35 @@ const ActiveLink = React.forwardRef<HTMLAnchorElement, Props>(
     ref
   ) => {
     const pathname = usePathname();
+    // Check if children is a single anchor element
+    let isAnchorChild = false;
+    if (React.isValidElement(children) && children.type === 'a') {
+      isAnchorChild = true;
+    }
+    const linkClass = cn(
+      `${buttonVariants({ variant, size })} ${
+        href === pathname || (include && pathname.includes(include))
+          ? workspaceIcon
+            ? "font-semibold border-secondary-foreground border-2"
+            : disableActiveStateColor
+            ? ""
+            : "bg-secondary font-semibold"
+          : ""
+      }`,
+      className
+    );
+    if (isAnchorChild) {
+      // Render a span to avoid nested <a>
+      return (
+        <span className={linkClass} {...props} ref={ref}>
+          {children}
+        </span>
+      );
+    }
     return (
       <Link
         href={href}
-        className={cn(
-          `${buttonVariants({ variant, size })} ${
-            href === pathname || (include && pathname.includes(include))
-              ? workspaceIcon
-                ? "font-semibold border-secondary-foreground border-2"
-                : disableActiveStateColor
-                ? ""
-                : "bg-secondary font-semibold"
-              : ""
-          }`,
-          className
-        )}
+        className={linkClass}
         ref={ref}
         {...props}
       >

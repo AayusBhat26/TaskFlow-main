@@ -34,7 +34,6 @@ export const SummarySection = () => {
             <p>
               {useCase === "WORK" && t("SECOND_STEP.WORK")}
               {useCase === "STUDY" && t("SECOND_STEP.STUDY")}
-              {useCase === "PERSONAL_USE" && t("SECOND_STEP.PERSONAL")}
             </p>
           )}
         </div>

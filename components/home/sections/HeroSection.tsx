@@ -49,6 +49,7 @@ export function HeroSection() {
               Get Started Free
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
+            {/*
             <Button 
               variant="outline" 
               size="lg" 
@@ -57,6 +58,7 @@ export function HeroSection() {
               <Play className="w-5 h-5 mr-2" />
               Watch Demo
             </Button>
+            */}
           </div>
 
           {/* Feature Pills */}
@@ -93,8 +95,14 @@ export function HeroSection() {
                       <div className="h-2 bg-muted/40 rounded w-1/2"></div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 mt-6">
-                      <div className="h-16 bg-primary/10 rounded-lg"></div>
-                      <div className="h-16 bg-accent/10 rounded-lg"></div>
+                      <div className="h-16 bg-primary/10 rounded-lg flex flex-col items-center justify-center">
+                        <span className="text-lg font-semibold text-primary">80/132</span>
+                        <span className="text-xs text-muted-foreground">Questions Completed</span>
+                      </div>
+                      <div className="h-16 bg-accent/10 rounded-lg flex flex-col items-center justify-center">
+                        <span className="text-lg font-semibold text-accent">3</span>
+                        <span className="text-xs text-muted-foreground">Tasks in Task List</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -120,16 +128,6 @@ export function HeroSection() {
           </div>
 
           {/* Social Proof */}
-          <div className="mt-16 pt-8 border-t border-border/50">
-            <p className="text-sm text-muted-foreground mb-6">Trusted by teams at</p>
-            <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
-              {["Company A", "Company B", "Company C", "Company D"].map((company, index) => (
-                <div key={index} className="text-lg font-semibold text-muted-foreground">
-                  {company}
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </section>

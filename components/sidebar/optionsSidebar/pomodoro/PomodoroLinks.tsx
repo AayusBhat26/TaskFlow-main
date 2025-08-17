@@ -1,10 +1,12 @@
 "use client";
+import React from "react";
 import ActiveLink from "@/components/ui/active-link";
 import { Clock, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 export const PomodoroLinks = () => {
   const t = useTranslations("SIDEBAR.POMODORO");
+  // Modal removed, restore sidebar link for settings
   return (
     <div className="flex flex-col gap-6 w-full">
       <div className="flex flex-col gap-2 w-full mt-2">

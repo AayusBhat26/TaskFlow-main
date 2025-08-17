@@ -72,20 +72,19 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          // Call your user service microservice for authentication
-          const response = await userService.login({
-            email: credentials.email,
-            password: credentials.password,
+          const res = await fetch("http://localhost:3000/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
           });
-          console.log("[NextAuth] userService.login response:", response);
-
-          if (!response.success || !response.data?.user) {
-            console.log("[NextAuth] Login failed:", response.error);
-            throw new Error(response.error || "Authentication failed");
+          const response = await res.json();
+          if (!res.ok || !response.user) {
+            throw new Error(response.message || "Authentication failed");
           }
-
-          const user = response.data.user;
-          console.log("[NextAuth] Returning user:", user);
+          const user = response.user;
           return {
             id: user.id,
             email: user.email,

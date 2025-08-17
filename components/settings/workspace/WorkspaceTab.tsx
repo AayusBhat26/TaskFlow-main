@@ -9,6 +9,7 @@ import { MembersCard } from "./members/MembersCard";
 interface Props {
   workspace: SettingsWorkspace;
   workspaceId: string;
+  refetchWorkspaces?: () => void;
 }
 
 export const WorkspaceTab = ({ workspace, workspaceId }: Props) => {
@@ -29,7 +30,7 @@ export const WorkspaceTab = ({ workspace, workspaceId }: Props) => {
         <div className="py-4 smLpy-6">
           <Separator />
         </div>
-        <DeleteWorkspace workspace={workspace} />
+        <DeleteWorkspace workspace={workspace} refetchWorkspaces={typeof refetchWorkspaces === 'function' ? refetchWorkspaces : undefined} />
       </TabsContent>
       <TabsContent value="members">
         <MembersCard workspace={workspace} workspaceId={workspaceId} />

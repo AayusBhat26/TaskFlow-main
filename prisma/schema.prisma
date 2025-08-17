@@ -989,7 +989,6 @@ enum UserPermission {
 enum UseCase {
   WORK
   STUDY
-  PERSONAL_USE
 }
 
 enum NotifyType {

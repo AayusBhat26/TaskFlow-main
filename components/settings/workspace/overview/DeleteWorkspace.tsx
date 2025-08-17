@@ -41,10 +41,13 @@ import { z } from "zod";
 
 interface Props {
   workspace: SettingsWorkspace;
+  refetchWorkspaces?: () => void;
 }
 
 export const DeleteWorkspace = ({ workspace: { id, name } }: Props) => {
   const t = useTranslations("EDIT_WORKSPACE.DELETE");
+  // Accept refetchWorkspaces from props
+  const refetchWorkspaces = (typeof workspace === 'object' && 'refetchWorkspaces' in workspace) ? (workspace as any).refetchWorkspaces : undefined;
   const { toast } = useToast();
   const m = useTranslations("MESSAGES");
   const lang = useLocale();
@@ -89,7 +92,7 @@ export const DeleteWorkspace = ({ workspace: { id, name } }: Props) => {
       toast({
         title: m("SUCCESS.DELETED_WORKSPACE_INFO"),
       });
-
+      if (refetchWorkspaces) refetchWorkspaces();
       router.push("/dashboard/settings");
       router.refresh();
     },

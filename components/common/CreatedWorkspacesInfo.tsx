@@ -10,8 +10,6 @@ interface Props {
 }
 
 export const CreatedWorkspacesInfo = ({ className, createdNumber }: Props) => {
-  const t = useTranslations("COMMON");
-
   return (
     <p
       className={cn(
@@ -19,11 +17,7 @@ export const CreatedWorkspacesInfo = ({ className, createdNumber }: Props) => {
         className
       )}
     >
-      {t("ACTIVE_WORKSPACES.FIRST")}{" "}
-      <span className="font-bold">
-        {createdNumber} {t("ACTIVE_WORKSPACES.SECOND")} {MAX_USER_WORKSPACES}
-      </span>{" "}
-      {t("ACTIVE_WORKSPACES.THIRD")}
+      You have used <span className="font-bold">{createdNumber} of {MAX_USER_WORKSPACES}</span> active workspaces
     </p>
   );
 };

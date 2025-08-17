@@ -28,9 +28,10 @@ import { useForm } from "react-hook-form";
 
 interface Props {
   onSetOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  refetchWorkspaces?: () => void;
 }
 
-export const AddWorkspaceForm = ({ onSetOpen }: Props) => {
+export const AddWorkspaceForm = ({ onSetOpen, refetchWorkspaces }: Props) => {
   const t = useTranslations("AUTH.NEW_WORKSPACE");
   const m = useTranslations("MESSAGES");
   const { toast } = useToast();
@@ -57,6 +58,7 @@ export const AddWorkspaceForm = ({ onSetOpen }: Props) => {
     },
     onSuccess: () => {
       onSetOpen(false);
+      if (refetchWorkspaces) refetchWorkspaces();
       toast({
         title: m("SUCCESS.NEW_WORKSPACE"),
       });

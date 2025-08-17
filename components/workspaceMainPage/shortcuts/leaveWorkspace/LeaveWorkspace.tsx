@@ -22,10 +22,13 @@ import { LoadingState } from "../../../ui/loadingState";
 
 interface Props {
   workspace: Workspace;
+  refetchWorkspaces?: () => void;
 }
 
 export const LeaveWorkspace = ({ workspace: { id, name } }: Props) => {
   const [open, setOpen] = useState(false);
+  // Accept refetchWorkspaces from props
+  const refetchWorkspaces = (typeof workspace === 'object' && 'refetchWorkspaces' in workspace) ? (workspace as any).refetchWorkspaces : undefined;
 
   const t = useTranslations("LEAVE_FROM_WORKSPACE");
   const m = useTranslations("MESSAGES");
@@ -50,7 +53,7 @@ export const LeaveWorkspace = ({ workspace: { id, name } }: Props) => {
       toast({
         title: m("SUCCES.LEAVE_FROM_WORKSPACE"),
       });
-
+      if (refetchWorkspaces) refetchWorkspaces();
       router.push("/dashboard");
       router.refresh();
     },

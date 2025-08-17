@@ -147,7 +147,7 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
   };
 
   return (
-    <div className="flex h-full bg-background overflow-hidden">
+    <div className="flex h-full bg-background overflow-hidden" style={{marginLeft: 0, paddingLeft: 0}}>
       <NotesSidebar
         notes={allNotes}
         workspaces={workspaces}
@@ -160,7 +160,6 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
         onNoteDelete={handleNoteDelete}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
-      
       <div className="flex-1 flex flex-col min-w-0 h-full">
         {selectedNote ? (
           <NotesEditor

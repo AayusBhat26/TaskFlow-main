@@ -382,32 +382,7 @@ export function NotesSidebar({
         </div>
       </ScrollArea>
 
-      {/* User Info */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-center">
-          <Avatar className="w-8 h-8">
-            <AvatarImage src={currentUser.image || ''} alt={currentUser.name} />
-            <AvatarFallback className="bg-blue-500 text-white font-semibold text-xs">
-              {currentUser.name?.charAt(0) || currentUser.username?.charAt(0) || 'U'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="ml-3 min-w-0 flex-1">
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-              {currentUser.name || currentUser.username}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {notes.length} {notes.length === 1 ? 'note' : 'notes'}
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <Settings className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
+  {/* User Info removed for notes page UI cleanup */}
     </div>
   );
 }

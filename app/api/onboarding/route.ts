@@ -49,7 +49,7 @@ export async function POST(request: Request) {
         completedOnboarding: true,
         name,
         surname,
-        useCase: useCase as UseCaseType,
+        ...(useCase ? { useCase } : {}),
         leetcodeUsername,
         codeforcesUsername,
         redditUsername,
@@ -87,6 +87,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json("OK", { status: 200 });
   } catch (err) {
-    return NextResponse.json("ERRORS.DB_ERROR", { status: 405 });
+  console.error("Onboarding DB error:", err);
+  return NextResponse.json("ERRORS.DB_ERROR", { status: 405 });
   }
 }

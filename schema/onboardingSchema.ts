@@ -7,7 +7,7 @@ export const onboardingSchema = z.object({
     .string()
     .refine(
       (string) =>
-        string === "WORK" || string === "STUDY" || string === "PERSONAL_USE"
+        string === "WORK" || string === "STUDY"
     ),
   workspaceName: z
     .string()

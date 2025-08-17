@@ -64,12 +64,9 @@ export default async function ChatPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">No Workspaces Found</h1>
           <p className="text-muted-foreground mb-4">You need to be part of a workspace to use chat.</p>
-          <a 
-            href="/dashboard" 
-            className="text-blue-600 hover:text-blue-800 underline"
-          >
+          <Link href="/dashboard" className="text-blue-600 hover:text-blue-800 underline">
             Go to Dashboard
-          </a>
+          </Link>
         </div>
       </div>
     );

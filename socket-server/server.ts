@@ -27,7 +27,6 @@ const activeUsers = new Map<string, {
 }>();
 
 io.on('connection', (socket) => {
-  console.log('🔗 User connected:', socket.id);
 
   // Handle user authentication
   socket.on('authenticate', async (data: { userId: string; username: string }) => {
@@ -38,7 +37,6 @@ io.on('connection', (socket) => {
         socketId: socket.id
       });
 
-      console.log(`✅ User ${data.username} authenticated with socket ${socket.id}`);
     } catch (error) {
       console.error('❌ Authentication error:', error);
       socket.emit('auth-error', { message: 'Authentication failed' });
@@ -50,7 +48,6 @@ io.on('connection', (socket) => {
     try {
       const user = activeUsers.get(socket.id);
       if (!user) {
-        console.log('❌ User not authenticated for workspace join');
         socket.emit('error', { message: 'User not authenticated' });
         return;
       }
@@ -58,7 +55,6 @@ io.on('connection', (socket) => {
       // Leave previous workspace if any
       if (user.workspaceId) {
         socket.leave(`workspace:${user.workspaceId}`);
-        console.log(`👋 User ${user.username} left workspace ${user.workspaceId}`);
       }
 
       // Join new workspace
@@ -66,7 +62,6 @@ io.on('connection', (socket) => {
       user.workspaceId = data.workspaceId;
       activeUsers.set(socket.id, user);
 
-      console.log(`🏠 User ${user.username} joined workspace ${data.workspaceId}`);
 
       // Notify others in the workspace
       socket.to(`workspace:${data.workspaceId}`).emit('user-joined', {
@@ -89,7 +84,6 @@ io.on('connection', (socket) => {
     user.workspaceId = undefined;
     activeUsers.set(socket.id, user);
 
-    console.log(`👋 User ${user.username} left workspace ${data.workspaceId}`);
 
     // Notify others in the workspace
     socket.to(`workspace:${data.workspaceId}`).emit('user-left', {
@@ -103,16 +97,13 @@ io.on('connection', (socket) => {
     try {
       const user = activeUsers.get(socket.id);
       if (!user) {
-        console.log('❌ User not authenticated for message broadcast');
         return;
       }
 
-      console.log(`📢 Broadcasting message from ${user.username} to workspace ${data.workspaceId}`);
 
       // Broadcast the message to ALL users in the workspace (including sender)
       io.to(`workspace:${data.workspaceId}`).emit('new-message', data.message);
       
-      console.log(`✅ Message broadcasted to workspace:${data.workspaceId}`);
     } catch (error) {
       console.error('❌ Error broadcasting message:', error);
       socket.emit('error', { message: 'Failed to broadcast message' });
@@ -124,12 +115,10 @@ io.on('connection', (socket) => {
     try {
       const user = activeUsers.get(socket.id);
       if (!user) {
-        console.log('❌ User not authenticated for message send');
         socket.emit('error', { message: 'User not authenticated' });
         return;
       }
 
-      console.log(`💬 Processing message from ${user.username} to workspace ${data.workspaceId}`);
 
       // Save message to database
       const message = await prisma.chatMessage.create({
@@ -150,12 +139,10 @@ io.on('connection', (socket) => {
         }
       });
 
-      console.log(`✅ Message saved to database:`, message);
 
       // Broadcast to all users in the workspace (including sender)
       io.to(`workspace:${data.workspaceId}`).emit('new-message', message);
       
-      console.log(`📡 Message broadcasted to workspace ${data.workspaceId}`);
 
     } catch (error) {
       console.error('❌ Send message error:', error);
@@ -167,7 +154,6 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     const user = activeUsers.get(socket.id);
     if (user) {
-      console.log(`👋 User ${user.username} disconnected`);
       
       // Notify workspace if user was in one
       if (user.workspaceId) {
@@ -187,22 +173,18 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.SOCKET_PORT || 3001;
+const PORT = process.env.PORT || process.env.SOCKET_PORT || 8080;
 
 httpServer.listen(PORT, () => {
-  console.log(`🚀 Chat Socket server running on port ${PORT}`);
-  console.log(`📡 WebSocket URL: ws://localhost:${PORT}`);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('Shutting down chat socket server...');
   await prisma.$disconnect();
   httpServer.close();
 });
 
 process.on('SIGINT', async () => {
-  console.log('Shutting down chat socket server...');
   await prisma.$disconnect();
   httpServer.close();
 });

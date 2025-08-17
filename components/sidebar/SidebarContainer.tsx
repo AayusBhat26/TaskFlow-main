@@ -1,10 +1,13 @@
 "use client";
+import { usePathname } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 
 import { useToggleSidebar } from "@/context/ToggleSidebar";
 import { OptionsSidebar } from "./optionsSidebar/OptionsSidebar";
 import { ShortcutSidebar } from "./shortcutSidebar/ShortcutSidebar";
 import { CloseSidebar } from "./CloseSidebar";
 import { Workspace } from "@prisma/client";
+import { getWorkspaces } from "@/lib/api";
 
 interface Props {
   userWorkspaces: Workspace[];
@@ -17,9 +20,27 @@ export const SidebarContainer = ({
   userId,
   userAdminWorkspaces,
 }: Props) => {
+  const pathname = usePathname();
   const { isOpen, setIsOpen } = useToggleSidebar();
-  const createdWorkspaces = userWorkspaces.filter(
+  // Use React Query to fetch workspaces
+  const {
+    data: workspaces = [],
+    refetch: refetchWorkspaces,
+  } = useQuery({
+    queryKey: ["userWorkspaces", userId],
+    queryFn: () => getWorkspaces(userId),
+    initialData: userWorkspaces,
+  });
+  const createdWorkspaces = workspaces.filter(
     (workspace) => workspace.creatorId == userId
+  );
+  // Always filter admin workspaces from latest workspaces
+  const latestAdminWorkspaces = workspaces.filter(
+    (workspace: any) =>
+      Array.isArray(workspace.subscribers) &&
+      workspace.subscribers.some(
+        (sub: any) => sub.user.id === userId && sub.userRole === "ADMIN"
+      )
   );
   return (
     <>
@@ -29,14 +50,17 @@ export const SidebarContainer = ({
         }`}
       >
         <ShortcutSidebar
-          userWorkspaces={userWorkspaces ? userWorkspaces : []}
+          userWorkspaces={workspaces}
           createdWorkspaces={createdWorkspaces.length}
+          refetchWorkspaces={refetchWorkspaces}
         />
-        <OptionsSidebar
-          createdWorkspaces={createdWorkspaces.length}
-          userAdminWorkspaces={userAdminWorkspaces}
-          userWorkspaces={userWorkspaces}
-        />
+        {!(pathname && pathname.includes("/notes") || (pathname && pathname.includes("/chat"))) && (
+          <OptionsSidebar
+            createdWorkspaces={createdWorkspaces.length}
+            userAdminWorkspaces={userAdminWorkspaces}
+            userWorkspaces={workspaces}
+          />
+        )}
         <CloseSidebar />
       </aside>
       <div

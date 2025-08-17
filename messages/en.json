@@ -54,8 +54,9 @@
     }
   },
   "CHANGE_PROFILE_IMAGE": {
-    "TITLE": "Send a photo!",
-    "BUTTON": "Choose a photo"
+  "TITLE": "Send a photo!",
+  "BUTTON": "Choose a photo",
+  "HOVER": "Change your profile image"
   },
   "ONBOARDING_FORM": {
     "FIRST_STEP": {

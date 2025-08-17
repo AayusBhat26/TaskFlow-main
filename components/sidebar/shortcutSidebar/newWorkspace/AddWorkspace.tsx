@@ -23,9 +23,10 @@ import { CreatedWorkspacesInfo } from "@/components/common/CreatedWorkspacesInfo
 
 interface Props {
   createdWorkspaces: number;
+  refetchWorkspaces?: () => void;
 }
 
-export const AddWorkspace = ({ createdWorkspaces }: Props) => {
+export const AddWorkspace = ({ createdWorkspaces, refetchWorkspaces }: Props) => {
   const [open, setOpen] = useState(false);
   const t = useTranslations("SIDEBAR");
   return (
@@ -59,7 +60,7 @@ export const AddWorkspace = ({ createdWorkspaces }: Props) => {
                 createdNumber={createdWorkspaces}
               />
             </Warning>
-            <AddWorkspaceForm onSetOpen={setOpen} />
+            <AddWorkspaceForm onSetOpen={setOpen} refetchWorkspaces={refetchWorkspaces} />
           </DialogContent>
         </HoverCard>
       </Dialog>

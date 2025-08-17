@@ -151,7 +151,7 @@ export const CreativeHeader = () => {
             )}
           </Button>
           
-          <Button 
+          {/* <Button 
             variant="outline" 
             size="lg" 
             className="group text-lg px-12 py-6 h-auto border-2 border-border/50 hover:border-primary/50 bg-card/50 backdrop-blur-sm hover:bg-primary/5 transition-all duration-300"
@@ -165,13 +165,13 @@ export const CreativeHeader = () => {
           >
             <Play className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform duration-200" />
             Watch Magic Happen
-          </Button>
+          </Button> */}
         </div>
 
         {/* Feature Highlights with Creative Layout */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
           {[
-            { icon: Target, text: "AI-Powered Tasks", color: "from-blue-500/20 to-cyan-500/20" },
+            { icon: Target, text: "Tasks", color: "from-blue-500/20 to-cyan-500/20" },
             { icon: Users, text: "Team Harmony", color: "from-green-500/20 to-emerald-500/20" },
             { icon: Zap, text: "Lightning Fast", color: "from-yellow-500/20 to-orange-500/20" },
             { icon: Globe, text: "Global Sync", color: "from-purple-500/20 to-pink-500/20" }
@@ -264,6 +264,7 @@ export const CreativeHeader = () => {
         </div>
 
         {/* Social Proof with Animation */}
+        {/*
         <div className="mt-20 pt-12 border-t border-border/20">
           <p className="text-sm text-muted-foreground mb-8 flex items-center justify-center gap-2">
             <span>Trusted by innovators worldwide</span>
@@ -281,6 +282,7 @@ export const CreativeHeader = () => {
             ))}
           </div>
         </div>
+        */}
       </div>
 
       {/* Route Loading Overlay */}
