@@ -30,6 +30,9 @@ export const SidebarContainer = ({
     queryKey: ["userWorkspaces", userId],
     queryFn: () => getWorkspaces(userId),
     initialData: userWorkspaces,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2, // Reduce retries from default 3 to 2
+    retryDelay: 1000, // 1 second delay between retries
   });
   const createdWorkspaces = workspaces.filter(
     (workspace) => workspace.creatorId == userId

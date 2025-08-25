@@ -14,10 +14,22 @@ import {
 import { notFound } from "next/navigation";
 import { ACTIVITY_PER_PAGE } from "./constants";
 
-export const domain =
-  process.env.NODE_ENV !== "production"
-    ? "http://localhost:3000"
-    : process.env.NEXTAUTH_URL;
+// Get the base URL for API calls (without locale prefix)
+const getApiBaseUrl = () => {
+  if (process.env.NODE_ENV !== "production") {
+    return "http://localhost:3000";
+  }
+  
+  // In production, use the current origin or NEXTAUTH_URL base
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  
+  // Fallback to NEXTAUTH_URL for server-side calls
+  return process.env.NEXTAUTH_URL || "https://task-flow-main.vercel.app";
+};
+
+export const domain = getApiBaseUrl();
 
 export const getWorkspace = async (workspace_id: string, userId: string) => {
   const res = await fetch(
