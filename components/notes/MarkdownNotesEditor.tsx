@@ -61,14 +61,6 @@ interface MarkdownNotesEditorProps {
   isLoading?: boolean;
 }
 
-// Simplified table support - basic markdown only
-
-
-
-
-
-
-
 // Simple table insertion helper
 const insertSimpleTable = () => {
   return `| Column 1 | Column 2 | Column 3 |
@@ -76,12 +68,6 @@ const insertSimpleTable = () => {
 | Cell 1   | Cell 2   | Cell 3   |
 | Cell 4   | Cell 5   | Cell 6   |`;
 };
-
-// Table functionality simplified - now just inserts basic markdown tables
-
-// Tables are now display-only in preview mode
-
-
 // Command Suggestions Modal Component
 interface CommandSuggestionsModalProps {
   isOpen: boolean;
@@ -279,7 +265,7 @@ const CommandSuggestionsModal: React.FC<CommandSuggestionsModalProps> = ({ isOpe
                       `inline code`<br/><br/>
                       ```javascript<br/>
                       // code block<br/>
-                      console.log('hello');<br/>
+                      function hello() &#123; &#125;<br/>
                       ```
                     </div>
                   </div>
@@ -347,7 +333,6 @@ const renderMarkdown = (
   isPreviewMode: boolean = false
 ): React.ReactNode => {
   const lines = content.split('\n');
-  console.log('🔥 renderMarkdown called with', lines.length, 'lines:', lines); // Debug log
   const elements: React.ReactNode[] = [];
 
   // Collect footnotes in the first pass
@@ -566,16 +551,12 @@ const renderMarkdown = (
 
     // Enhanced Tables with alignment support
     if (line.includes('|') && line.trim().startsWith('|') && line.trim().endsWith('|')) {
-      console.log('🔥 Table detected at line', i, ':', line); // Debug log
       const tableLines = [];
       let j = i;
       while (j < lines.length && lines[j].includes('|')) {
-        console.log('🔥 Adding table line', j, ':', lines[j]); // Debug log
         tableLines.push(lines[j]);
         j++;
       }
-      console.log('🔥 Table collection finished. i:', i, 'j:', j, 'tableLines:', tableLines); // Debug log
-      console.log('🔥 Table range will be: start =', i, ', end =', j); // Debug log
 
       if (tableLines.length >= 2) {
         const headers = tableLines[0].split('|').map(cell => cell.trim()).filter(Boolean);
@@ -1772,7 +1753,7 @@ export function MarkdownNotesEditor({
                       try {
                         await onNoteDelete(note!.id);
                       } catch (error) {
-                        console.error('Error deleting note:', error);
+                        // Error handled by parent component
                       }
                     }
                   }}

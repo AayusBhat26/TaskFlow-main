@@ -8,7 +8,7 @@ import { MarkdownNotesEditor } from './MarkdownNotesEditor';
 import { EnhancedNotesSidebar } from './EnhancedNotesSidebar';
 import { NotesWelcome } from './NotesWelcome';
 
-// Cache for note content - moved to module level for persistence
+// Cache for note content
 const noteContentCache = new Map<string, Note>();
 
 // Block Types
@@ -108,7 +108,7 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
   const { toast } = useToast();
   const loadingTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // Stable handleNoteSelect that won't cause cycles
+  // Stable handleNoteSelect function
   const selectingRef = useRef(false);
   const handleNoteSelect = useCallback(async (note: Note) => {
     // Prevent re-selecting the same note or concurrent selections
@@ -119,29 +119,27 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
     selectingRef.current = true;
 
     try {
-      // Immediate UI update for instant feel
       setSelectedNote(note);
 
-      // Check cache first for instant loading
+      // Check cache first
       if (noteContentCache.has(note.id)) {
         const cachedNote = noteContentCache.get(note.id)!;
         setSelectedNote(cachedNote);
         return;
       }
 
-      // Show loading state only for slow connections
+      // Show loading state for slow connections
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
 
       loadingTimeoutRef.current = setTimeout(() => {
         setIsLoading(true);
-      }, 150); // Only show loading after 150ms
+      }, 150);
 
-      // Fetch full note details including content
+      // Fetch full note details
       const response = await fetch(`/api/notes/${note.id}`);
 
-      // Clear loading timeout
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
@@ -149,39 +147,35 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
 
       if (response.ok) {
         const fullNote = await response.json();
-        // Cache the note for instant future access
         noteContentCache.set(note.id, fullNote);
         setSelectedNote(fullNote);
       } else {
-        console.error('Failed to fetch note details');
-        setSelectedNote(note); // Fallback to provided note
+        setSelectedNote(note);
       }
     } catch (error) {
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
       setIsLoading(false);
-      console.error('Error fetching note details:', error);
-      setSelectedNote(note); // Fallback to provided note
+      setSelectedNote(note);
     } finally {
       selectingRef.current = false;
     }
   }, [selectedNote?.id]);
 
-  // Store handleNoteSelect in ref to avoid dependency issues
+  // Store handleNoteSelect in ref
   const handleNoteSelectRef = useRef(handleNoteSelect);
   useEffect(() => {
     handleNoteSelectRef.current = handleNoteSelect;
   }, [handleNoteSelect]);
 
-  // Auto-select first note if available, but don't override user selection
-  // Use a stable ref-based approach to prevent infinite loops
+  // Auto-select first note if available
   const hasAttemptedAutoSelect = useRef(false);
   const lastNotesLength = useRef(allNotes.length);
   const lastSelectedId = useRef(selectedNote?.id);
 
   useEffect(() => {
-    // Skip if nothing has actually changed
+    // Skip if nothing has changed
     if (hasAttemptedAutoSelect.current &&
         lastNotesLength.current === allNotes.length &&
         lastSelectedId.current === selectedNote?.id) {
@@ -192,7 +186,7 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
     lastSelectedId.current = selectedNote?.id;
 
     const performAutoSelection = async () => {
-      // Only auto-select if we don't have a note selected and notes are available
+      // Auto-select first note if none selected
       if (allNotes.length > 0 && !selectedNote) {
         hasAttemptedAutoSelect.current = true;
         await handleNoteSelectRef.current(allNotes[0]);
@@ -213,7 +207,7 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
     };
 
     performAutoSelection();
-  }, [allNotes.length, selectedNote?.id]); // Removed handleNoteSelect from dependencies
+  }, [allNotes.length, selectedNote?.id]);
 
   // Reset auto-selection flag when notes are manually selected
   useEffect(() => {
@@ -225,7 +219,6 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
   // Preload note content for faster switching
   useEffect(() => {
     const preloadNotes = async () => {
-      // Preload first 3 notes for instant access
       const notesToPreload = allNotes.slice(0, 3);
       for (const note of notesToPreload) {
         if (!noteContentCache.has(note.id)) {
@@ -237,13 +230,11 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
             }
           } catch (error) {
             // Silently fail for preloading
-            console.debug('Preload failed for note:', note.id);
           }
         }
       }
     };
 
-    // Preload after a short delay to avoid blocking initial render
     const preloadTimer = setTimeout(preloadNotes, 100);
     return () => clearTimeout(preloadTimer);
   }, [allNotes]);
@@ -251,7 +242,7 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
   const handleNoteCreate = useCallback(async (noteData: Partial<Note>) => {
     if (isCreating) return;
 
-    // Create optimistic note for instant UI feedback
+    // Create optimistic note
     const optimisticNote: Note = {
       id: `temp-${Date.now()}`,
       title: noteData.title || 'Untitled',
@@ -276,12 +267,11 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
         blocks: 0,
         children: 0,
       },
-      blocks: [], // Required by Note interface
+      blocks: [],
       content: '# Welcome to your new note!\n\nStart writing your thoughts in **Markdown**...',
       ...noteData
     };
 
-    // Immediate UI update
     setAllNotes(prev => [optimisticNote, ...prev]);
     setSelectedNote(optimisticNote);
     setIsCreating(true);
@@ -313,8 +303,6 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
         note.id === optimisticNote.id ? newNote : note
       ));
       setSelectedNote(newNote);
-
-      // Cache the new note
       noteContentCache.set(newNote.id, newNote);
 
       toast({
@@ -322,19 +310,15 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
         description: `"${newNote.title}" has been created successfully.`,
       });
     } catch (error) {
-      console.error('Error creating note:', error);
-
       // Remove optimistic note on failure
       setAllNotes(prev => {
         const updatedNotes = prev.filter(note => note.id !== optimisticNote.id);
         return updatedNotes;
       });
 
-      // Use functional update to avoid stale closure
       setSelectedNote(prev => {
         if (prev?.id === optimisticNote.id) {
-          // Get current allNotes from state to avoid stale reference
-          return null; // Will be set by auto-select effect
+          return null;
         }
         return prev;
       });
@@ -349,7 +333,7 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
     }
   }, [isCreating, toast, currentUser]);
 
-  // Global keyboard shortcuts for instant productivity - use refs to avoid dependency cycles
+  // Global keyboard shortcuts - use refs to avoid dependency cycles
   const allNotesRef = useRef(allNotes);
   const selectedNoteRef = useRef(selectedNote);
   const handleNoteCreateRef = useRef(handleNoteCreate);
@@ -375,7 +359,7 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
         handleNoteCreateRef.current({ title: 'Untitled', icon: '📝' });
       }
 
-      // Ctrl/Cmd + K for search (focus search)
+      // Ctrl/Cmd + K for search
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
@@ -385,7 +369,7 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
         }
       }
 
-      // Arrow keys for note navigation (when not in editor)
+      // Arrow keys for note navigation
       if (!document.activeElement?.matches('textarea, input[type="text"]')) {
         const currentNotes = allNotesRef.current;
         const currentSelected = selectedNoteRef.current;
@@ -412,19 +396,18 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []); // Empty dependency array - use refs to access current values
+  }, []);
 
   const handleNoteUpdate = useCallback(async (noteId: string, updates: Partial<Note>) => {
-    // Store original note before optimistic update for potential rollback
     let originalNote: Note | undefined;
 
-    // Optimistic update for instant UI feedback
+    // Optimistic update
     const optimisticUpdate = (note: Note) => ({ ...note, ...updates, updatedAt: new Date() });
 
     setAllNotes(prev => {
       const updated = prev.map(note => {
         if (note.id === noteId) {
-          originalNote = note; // Store original for rollback
+          originalNote = note;
           return optimisticUpdate(note);
         }
         return note;
@@ -435,7 +418,6 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
     setSelectedNote(prev => {
       if (prev?.id === noteId) {
         const optimisticNote = optimisticUpdate(prev);
-        // Update cache immediately
         noteContentCache.set(noteId, optimisticNote);
         return optimisticNote;
       }
@@ -463,13 +445,9 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
       );
 
       setSelectedNote(prev => prev?.id === noteId ? updatedNote : prev);
-
-      // Update cache with server response
       noteContentCache.set(noteId, updatedNote);
     } catch (error) {
-      console.error('Error updating note:', error);
-
-      // Revert optimistic update on failure using stored original
+      // Revert optimistic update on failure
       if (originalNote) {
         setAllNotes(prev =>
           prev.map(note => note.id === noteId ? originalNote : note)
@@ -502,13 +480,11 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
         throw new Error('Failed to delete note');
       }
 
-      // Update notes list and handle selection logic
+      // Update notes list and handle selection
       setAllNotes(prev => {
         const updatedNotes = prev.filter(note => note.id !== noteId);
 
-        // If the deleted note was selected, update selection
         if (selectedNote?.id === noteId) {
-          // Select the first available note or null if no notes remain
           const nextNote = updatedNotes.length > 0 ? updatedNotes[0] : null;
           setSelectedNote(nextNote);
         }
@@ -516,7 +492,6 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
         return updatedNotes;
       });
 
-      // Remove from cache
       noteContentCache.delete(noteId);
 
       toast({
@@ -524,7 +499,6 @@ export function NotesApp({ notes, workspaces, currentUser }: NotesAppProps) {
         description: 'The note has been permanently deleted.',
       });
     } catch (error) {
-      console.error('Error deleting note:', error);
       toast({
         title: 'Error',
         description: 'Failed to delete note. Please try again.',
