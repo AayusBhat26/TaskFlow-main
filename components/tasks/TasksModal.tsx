@@ -10,12 +10,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { 
-  CheckCircle2, 
-  Circle, 
-  Calendar, 
-  User, 
-  Tag, 
+import {
+  CheckCircle2,
+  Circle,
+  Calendar,
+  User,
+  Tag,
   Search,
   Filter,
   Clock,
@@ -75,30 +75,30 @@ export function TasksModal({ workspaceId, trigger }: TasksModalProps) {
 
   // Fetch tasks when modal opens (only once)
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && workspaceId) {
       // Fetch all tasks once when modal opens, then filter client-side
       fetchTasks({
         workspaceId,
         filter: 'all' // Always fetch all tasks
       });
     }
-  }, [isOpen, workspaceId, fetchTasks]);
+  }, [isOpen, workspaceId]); // Remove fetchTasks from dependencies to prevent loops
 
   // Client-side filtering for better performance and no race conditions
   const filteredTasks = tasks.filter(task => {
     // Search filter
-    const matchesSearch = !searchQuery || 
+    const matchesSearch = !searchQuery ||
       task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.content?.text?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.creator.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.tags?.some(tag => tag.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    
+
     // Completion filter
-    const matchesCompletion = 
-      filterCompleted === 'all' || 
+    const matchesCompletion =
+      filterCompleted === 'all' ||
       (filterCompleted === 'completed' && task.isCompleted) ||
       (filterCompleted === 'pending' && !task.isCompleted);
-    
+
     return matchesSearch && matchesCompletion;
   });
 
@@ -112,7 +112,7 @@ export function TasksModal({ workspaceId, trigger }: TasksModalProps) {
     const now = new Date();
     const diffTime = date.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) {
       return `Overdue by ${Math.abs(diffDays)} day(s)`;
     } else if (diffDays === 0) {
@@ -144,7 +144,7 @@ export function TasksModal({ workspaceId, trigger }: TasksModalProps) {
             </Badge>
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="p-6 pt-4 space-y-4">
           {/* Search and Filter Controls */}
           <div className="flex flex-col sm:flex-row gap-4">
@@ -205,9 +205,9 @@ export function TasksModal({ workspaceId, trigger }: TasksModalProps) {
                   <AlertCircle className="w-8 h-8 mx-auto mb-2 text-destructive" />
                   <p className="text-destructive">Error loading tasks</p>
                   <p className="text-sm">{error}</p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="mt-2"
                     onClick={refreshTasks}
                   >
@@ -223,7 +223,7 @@ export function TasksModal({ workspaceId, trigger }: TasksModalProps) {
               ) : (
                 filteredTasks.map((task) => {
                   const isCompleted = task.isCompleted;
-                  
+
                   return (
                     <Card key={task.id} className={cn(
                       "transition-all duration-200 hover:shadow-md",
@@ -268,15 +268,15 @@ export function TasksModal({ workspaceId, trigger }: TasksModalProps) {
                                   {task.title}
                                 </h3>
                               </div>
-                              
+
                               {/* Due Date */}
                               {task.taskDate && task.taskDate.from && (
-                                <Badge 
-                                  variant="outline" 
+                                <Badge
+                                  variant="outline"
                                   className={cn(
                                     "shrink-0",
-                                    new Date(task.taskDate.from) < new Date() && !isCompleted 
-                                      ? "border-red-500 text-red-700" 
+                                    new Date(task.taskDate.from) < new Date() && !isCompleted
+                                      ? "border-red-500 text-red-700"
                                       : "border-blue-500 text-blue-700"
                                   )}
                                 >
@@ -297,9 +297,9 @@ export function TasksModal({ workspaceId, trigger }: TasksModalProps) {
                             {task.tags && task.tags.length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-2">
                                 {task.tags.map((tag) => (
-                                  <Badge 
-                                    key={tag.id} 
-                                    variant="secondary" 
+                                  <Badge
+                                    key={tag.id}
+                                    variant="secondary"
                                     className="text-xs"
                                     style={{ backgroundColor: `${tag.color}20`, color: tag.color }}
                                   >

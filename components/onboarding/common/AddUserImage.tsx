@@ -1,4 +1,18 @@
+import { useToast } from "@/hooks/use-toast";
+import { useUploadThing } from "@/lib/uploadthing";
+import { cn } from "@/lib/utils";
+import { imageSchema, ImageSchema } from "@/schema/imageSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { User as UserType } from "@prisma/client";
+import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
+import { Camera, Check, Trash, User } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useMemo, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 import { Button } from "../../ui/button";
 import {
   Dialog,
@@ -7,24 +21,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../../ui/dialog";
-import { Camera, Check, Trash, User } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
-import { UserAvatar } from "../../ui/user-avatar";
 import { Form, FormControl, FormField, FormItem } from "../../ui/form";
-import { useForm } from "react-hook-form";
-import { imageSchema, ImageSchema } from "@/schema/imageSchema";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "../../ui/input";
-import { useUploadThing } from "@/lib/uploadthing";
-import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
-import { User as UserType } from "@prisma/client";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { LoadingState } from "../../ui/loadingState";
-import { useToast } from "@/hooks/use-toast";
-import { useTranslations } from "next-intl";
-import { cn } from "@/lib/utils";
+import { UserAvatar } from "../../ui/user-avatar";
 
 interface Props {
   profileImage?: string | null;
@@ -40,6 +40,7 @@ export const AddUserImage = ({ profileImage, className }: Props) => {
   const { toast } = useToast();
   const m = useTranslations("MESSAGES");
   const t = useTranslations("CHANGE_PROFILE_IMAGE");
+  const o = useTranslations("ONBOARDING_FORM");
 
   const form = useForm<ImageSchema>({
     resolver: zodResolver(imageSchema),
@@ -154,7 +155,7 @@ export const AddUserImage = ({ profileImage, className }: Props) => {
 
   return (
     <div className="w-full flex flex-col justify-center items-center gap-2">
-      <p className="text-sm text-muted-foreground">Add a photo</p>
+      <p className="text-sm text-muted-foreground">{o("FIRST_STEP.PHOTO")}</p>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button
@@ -182,7 +183,7 @@ export const AddUserImage = ({ profileImage, className }: Props) => {
         </DialogTrigger>
         <DialogContent className="flex flex-col items-center justify-center sm:max-w-[28rem] p-0">
           <DialogHeader className="items-center justify-center">
-            <DialogTitle>Upload a photo</DialogTitle>
+            <DialogTitle>{t("TITLE")}</DialogTitle>
           </DialogHeader>
           {imagePreview ? (
             <div className="rounded-full w-32 h-32 sm:w-52 sm:h-52 relative overflow-hidden my-5">
@@ -217,7 +218,7 @@ export const AddUserImage = ({ profileImage, className }: Props) => {
                           type="button"
                           className="dark:text-white mb-1"
                         >
-                          Choose a file
+                          {t("BUTTON")}
                         </Button>
                         <Input
                           {...field}
@@ -240,11 +241,10 @@ export const AddUserImage = ({ profileImage, className }: Props) => {
                   type="button"
                   disabled={!imageOptions.canDelete || isDeleting}
                   variant={imageOptions.canDelete ? "default" : "secondary"}
-                  className={`rounded-full w-12 h-12 p-2 ${
-                    imageOptions.canDelete
+                  className={`rounded-full w-12 h-12 p-2 ${imageOptions.canDelete
                       ? "text-white"
                       : "text-muted-foreground"
-                  }`}
+                    }`}
                   onClick={() => deleteProfileImage()}
                 >
                   {isDeleting ? <LoadingState /> : <Trash size={18} />}
@@ -253,11 +253,10 @@ export const AddUserImage = ({ profileImage, className }: Props) => {
                   type="submit"
                   disabled={!imageOptions.canSave || isUploading || isPending}
                   variant={imageOptions.canSave ? "default" : "secondary"}
-                  className={`rounded-full w-12 h-12 p-2 ${
-                    imageOptions.canSave
+                  className={`rounded-full w-12 h-12 p-2 ${imageOptions.canSave
                       ? "text-white"
                       : "text-muted-foreground"
-                  }`}
+                    }`}
                 >
                   {isPending || isUploading ? (
                     <LoadingState />

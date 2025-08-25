@@ -11,7 +11,13 @@ import {
 import { Moon, Sun } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { HoverCard } from "../ui/hover-card";
-import { HoverCardContent } from "@radix-ui/react-hover-card";
+
+// Simple hover content component
+const HoverCardContent = ({ children, align }: { children: React.ReactNode; align?: "center" | "start" | "end" }) => (
+  <div className="absolute z-50 rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95">
+    {children}
+  </div>
+);
 
 interface Props {
   variant?:

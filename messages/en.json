@@ -97,12 +97,12 @@
       "DESC": "Link your external accounts to get personalized insights and track your progress across platforms.",
       "OPTIONAL_NOTE": "All fields are optional - you can skip this step and add them later.",
       "CODING_PLATFORMS": "Coding Platforms",
-      "SOCIAL_PLATFORMS": "Social Platforms", 
+      "SOCIAL_PLATFORMS": "Social Platforms",
       "EMAIL_TRACKING": "Email Tracking",
       "EMAIL_DESC": "Add email addresses you'd like to monitor for new messages",
       "INPUTS": {
         "LEETCODE": "LeetCode Username",
-        "CODEFORCES": "Codeforces Username", 
+        "CODEFORCES": "Codeforces Username",
         "GITHUB": "GitHub Username",
         "REDDIT": "Reddit Username",
         "EMAIL": "Email Address"
@@ -110,7 +110,7 @@
       "PLACEHOLDERS": {
         "LEETCODE": "e.g. john_doe",
         "CODEFORCES": "e.g. tourist",
-        "GITHUB": "e.g. octocat", 
+        "GITHUB": "e.g. octocat",
         "REDDIT": "e.g. username (without u/)",
         "EMAIL": "email@example.com"
       },
@@ -192,10 +192,15 @@
       },
       "WORKSPACE": {
         "SHORT": "Workspace name is too short",
-        "SPECIAL_CHARS": "Workspace name must only contain letters and digits"
+        "SPECIAL_CHARS": "Workspace name must only contain letters and digits",
+        "LONG": "Workspace name is too long",
+        "WRONG_NAME": "Please enter the correct workspace name"
       },
       "LANGUAGE": "Please select a language",
-      "CHOOSE_ONE": "Please select one of the options"
+      "CHOOSE_ONE": "Please select one of the options",
+      "PASSWORD_NOT_THE_SAME": "Passwords do not match",
+      "LINK": "Please enter a valid URL",
+      "IMAGE_REQUIRED": "Please select an image"
     }
   },
   "SIDEBAR": {

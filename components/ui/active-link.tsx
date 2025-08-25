@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -39,11 +39,18 @@ const ActiveLink = React.forwardRef<HTMLAnchorElement, Props>(
     ref
   ) => {
     const pathname = usePathname();
-    // Check if children is a single anchor element
-    let isAnchorChild = false;
-    if (React.isValidElement(children) && children.type === 'a') {
-      isAnchorChild = true;
-    }
+
+    // Check if this ActiveLink is inside a HoverCardTrigger or other wrapper that might create nested anchors
+    const isInWrapper = useRef(false);
+
+    // Check if children contains any anchor elements
+    const containsAnchor = React.Children.toArray(children).some(child => {
+      if (React.isValidElement(child)) {
+        return child.type === 'a' || child.type === Link;
+      }
+      return false;
+    });
+
     const linkClass = cn(
       `${buttonVariants({ variant, size })} ${
         href === pathname || (include && pathname.includes(include))
@@ -56,14 +63,16 @@ const ActiveLink = React.forwardRef<HTMLAnchorElement, Props>(
       }`,
       className
     );
-    if (isAnchorChild) {
-      // Render a span to avoid nested <a>
+
+    // If wrapped in HoverCardTrigger or contains anchor, render as div to avoid nesting
+    if (containsAnchor) {
       return (
-        <span className={linkClass} {...props} ref={ref}>
+        <div className={linkClass} {...(props as any)} ref={ref as any}>
           {children}
-        </span>
+        </div>
       );
     }
+
     return (
       <Link
         href={href}

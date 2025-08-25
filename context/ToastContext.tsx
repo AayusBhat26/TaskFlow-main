@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
 
 const TOAST_LIMIT = 1;
@@ -51,8 +51,15 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, []);
 
+  // Memoize the context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    toasts,
+    toast,
+    dismiss
+  }), [toasts, toast, dismiss]);
+
   return (
-    <ToastContext.Provider value={{ toasts, toast, dismiss }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
     </ToastContext.Provider>
   );

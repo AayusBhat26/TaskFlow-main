@@ -14,6 +14,8 @@ import {
   useContext,
   useEffect,
   useState,
+  useMemo,
+  useRef,
 } from "react";
 
 interface Props {
@@ -52,6 +54,10 @@ export const UserActivityStatusProvider = ({ children }: Props) => {
   const session = useSession();
   const workspaceId = params.workspace_id ? params.workspace_id : null;
 
+  // Use refs to prevent infinite loops
+  const previousUsersRef = useRef<UserActiveItemList[]>([]);
+  const hasInitializedRef = useRef(false);
+
   const {
     data: users,
     isError,
@@ -77,17 +83,26 @@ export const UserActivityStatusProvider = ({ children }: Props) => {
   });
 
   useEffect(() => {
-    if (!session.data) return;
+    if (!session.data?.user?.id || !users) return;
+
+    // Prevent unnecessary updates by comparing with previous users
+    const usersChanged = !hasInitializedRef.current ||
+      previousUsersRef.current.length !== users.length ||
+      previousUsersRef.current.some((prevUser, index) => prevUser.id !== users[index]?.id);
+
+    if (!usersChanged) return;
 
     console.log("📊 UserActivityStatus: Supabase disabled - using simple tracking");
-    
+
     // Simple tracking without Supabase - mark all users as active
-    if (users) {
-      setAllActiveUsers(users);
-      setAllInactiveUsers([]);
-    }
-    
-  }, [session.data, users]);
+    setAllActiveUsers(users);
+    setAllInactiveUsers([]);
+
+    // Update refs
+    previousUsersRef.current = users;
+    hasInitializedRef.current = true;
+
+  }, [session.data?.user?.id, users]);
 
   const getActiveUsersRoleType = useCallback(
     (role: UserPermission) => {
@@ -101,7 +116,7 @@ export const UserActivityStatusProvider = ({ children }: Props) => {
     [allActiveUsers]
   );
 
-  const info: UserActivityStatus = {
+  const info: UserActivityStatus = useMemo(() => ({
     isLoading,
     isError,
     allUsers: users ?? [],
@@ -110,7 +125,7 @@ export const UserActivityStatusProvider = ({ children }: Props) => {
     getActiveUsersRoleType,
     checkIfUserIsActive,
     refetch,
-  };
+  }), [isLoading, isError, users, allActiveUsers, allInactiveUsers, getActiveUsersRoleType, checkIfUserIsActive, refetch]);
 
   return (
     <UserActivityStatusCtx.Provider value={info}>

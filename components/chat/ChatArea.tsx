@@ -6,9 +6,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { 
-  Users, 
-  Hash, 
+import {
+  Users,
+  Hash,
   Send,
   Smile,
   Paperclip,
@@ -69,18 +69,33 @@ export function ChatArea({ workspace, currentUser, onOpenMobileMenu }: ChatAreaP
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [showMembersSidebar, setShowMembersSidebar] = useState(false);
 
+  // Use refs to store socket functions to prevent infinite re-renders
+  const joinWorkspaceRef = useRef(joinWorkspace);
+  const leaveWorkspaceRef = useRef(leaveWorkspace);
+
+  // Update refs when functions change
+  useEffect(() => {
+    joinWorkspaceRef.current = joinWorkspace;
+  }, [joinWorkspace]);
+
+  useEffect(() => {
+    leaveWorkspaceRef.current = leaveWorkspace;
+  }, [leaveWorkspace]);
+
   // Join workspace when component mounts or workspace changes
   useEffect(() => {
     if (workspace.id) {
-      joinWorkspace(workspace.id);
+      console.log('🔗 ChatArea: Joining workspace:', workspace.id);
+      joinWorkspaceRef.current(workspace.id);
     }
 
     return () => {
       if (workspace.id) {
-        leaveWorkspace(workspace.id);
+        console.log('🔗 ChatArea: Leaving workspace:', workspace.id);
+        leaveWorkspaceRef.current(workspace.id);
       }
     };
-  }, [workspace.id, joinWorkspace, leaveWorkspace]);
+  }, [workspace.id]); // Only depend on workspace.id
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
@@ -99,7 +114,7 @@ export function ChatArea({ workspace, currentUser, onOpenMobileMenu }: ChatAreaP
                 <Menu className="w-4 h-4" />
               </Button>
             )}
-            
+
             <div className={cn(
               "w-8 h-8 rounded-lg flex items-center justify-center text-white mr-3 flex-shrink-0",
               colorMap[workspace.color as keyof typeof colorMap] || colorMap.BLUE
@@ -119,21 +134,21 @@ export function ChatArea({ workspace, currentUser, onOpenMobileMenu }: ChatAreaP
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-2 flex-shrink-0">
             {/* Mobile members toggle */}
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 lg:hidden p-1"
               onClick={() => setShowMembersSidebar(!showMembersSidebar)}
             >
               <Users className="w-4 h-4" />
             </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
+
+            <Button
+              variant="ghost"
+              size="sm"
               className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-1"
             >
               <MoreVertical className="w-4 h-4" />
@@ -146,11 +161,11 @@ export function ChatArea({ workspace, currentUser, onOpenMobileMenu }: ChatAreaP
       <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Main Chat */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <MessageList 
-            workspaceId={workspace.id} 
+          <MessageList
+            workspaceId={workspace.id}
             currentUser={currentUser}
           />
-          <ChatInput 
+          <ChatInput
             workspaceId={workspace.id}
             currentUser={currentUser}
           />
@@ -168,18 +183,18 @@ export function ChatArea({ workspace, currentUser, onOpenMobileMenu }: ChatAreaP
           <ScrollArea className="h-full">
             <div className="space-y-2">
               {workspace.subscribers.map((subscription) => (
-                <div 
+                <div
                   key={subscription.user.id}
                   className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white transition-all duration-200 border border-transparent hover:border-gray-200"
                 >
                   <div className="relative flex-shrink-0">
                     <Avatar className="w-8 h-8">
-                      <AvatarImage 
-                        src={subscription.user.image || ''} 
-                        alt={subscription.user.name} 
+                      <AvatarImage
+                        src={subscription.user.image || ''}
+                        alt={subscription.user.name}
                       />
                       <AvatarFallback className="bg-blue-500 text-white font-semibold">
-                        {subscription.user.name?.charAt(0) || 
+                        {subscription.user.name?.charAt(0) ||
                          subscription.user.username?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
@@ -206,7 +221,7 @@ export function ChatArea({ workspace, currentUser, onOpenMobileMenu }: ChatAreaP
         {/* Members Sidebar - Mobile Overlay */}
         {showMembersSidebar && (
           <>
-            <div 
+            <div
               className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
               onClick={() => setShowMembersSidebar(false)}
             />
@@ -231,18 +246,18 @@ export function ChatArea({ workspace, currentUser, onOpenMobileMenu }: ChatAreaP
               <ScrollArea className="h-full">
                 <div className="space-y-2">
                   {workspace.subscribers.map((subscription) => (
-                    <div 
+                    <div
                       key={subscription.user.id}
                       className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       <div className="relative flex-shrink-0">
                         <Avatar className="w-8 h-8">
-                          <AvatarImage 
-                            src={subscription.user.image || ''} 
-                            alt={subscription.user.name} 
+                          <AvatarImage
+                            src={subscription.user.image || ''}
+                            alt={subscription.user.name}
                           />
                           <AvatarFallback className="bg-blue-500 text-white font-semibold">
-                            {subscription.user.name?.charAt(0) || 
+                            {subscription.user.name?.charAt(0) ||
                              subscription.user.username?.charAt(0) || 'U'}
                           </AvatarFallback>
                         </Avatar>

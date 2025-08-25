@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { getAuthSession } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 // Enhanced note schemas
@@ -12,20 +12,23 @@ const createNoteSchema = z.object({
   parentId: z.string().optional(),
   isPublic: z.boolean().optional(),
   tags: z.array(z.string()).optional(),
-  content: z.array(z.object({
+  // Legacy block-based format
+  blocks: z.array(z.object({
     id: z.string(),
-    type: z.enum(['TEXT', 'HEADING_1', 'HEADING_2', 'HEADING_3', 'BULLET_LIST', 'NUMBERED_LIST', 'TODO', 'QUOTE', 'CODE', 'TABLE', 'DIVIDER', 'IMAGE', 'CALLOUT', 'TOGGLE']),
+    type: z.enum(['TEXT', 'HEADING_1', 'HEADING_2', 'HEADING_3', 'BULLET_LIST', 'NUMBERED_LIST', 'TODO', 'QUOTE', 'CODE', 'DIVIDER', 'CALLOUT', 'IMAGE']),
     content: z.string(),
-    children: z.array(z.any()).optional(),
-    metadata: z.record(z.any()).optional()
+    properties: z.record(z.any()).optional(),
+    position: z.number()
   })).optional(),
+  // New markdown content format
+  content: z.string().optional(),
   templateId: z.string().optional()
 });
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getAuthSession();
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -90,6 +93,11 @@ export async function GET(request: NextRequest) {
             color: true,
           }
         },
+        blocks: {
+          orderBy: {
+            position: 'asc'
+          }
+        },
         children: {
           select: {
             id: true,
@@ -127,7 +135,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getAuthSession();
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -147,7 +155,8 @@ export async function POST(request: NextRequest) {
           isPublic: data.isPublic || false,
           authorId: session.user.id,
           position: 0, // Will be updated based on current notes count
-          templateId: data.templateId
+          templateId: data.templateId,
+          content: data.content || '# Welcome to your new note!\n\nStart writing your thoughts in **Markdown**...'
         }
       });
 
@@ -164,38 +173,35 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Create blocks from content or initial empty block
-      if (data.content && data.content.length > 0) {
-        for (let i = 0; i < data.content.length; i++) {
-          const block = data.content[i];
+      // Handle legacy blocks if provided (for backwards compatibility)
+      const blocksToCreate = data.blocks;
+      if (blocksToCreate && blocksToCreate.length > 0) {
+        for (let i = 0; i < blocksToCreate.length; i++) {
+          const block = blocksToCreate[i];
+          // Combine content and properties into a single JSON structure
+          const blockContent = {
+            text: block.content || '',
+            ...block.properties
+          };
+
           await tx.noteBlock.create({
             data: {
+              id: block.id || `block-${Date.now()}-${i}`,
               noteId: newNote.id,
               type: block.type,
-              content: block.content,
-              position: i,
+              content: blockContent,
+              position: block.position !== undefined ? block.position : i,
               createdById: session.user.id,
             }
           });
         }
-      } else {
-        // Create initial empty text block
-        await tx.noteBlock.create({
-          data: {
-            noteId: newNote.id,
-            type: 'TEXT',
-            content: '',
-            position: 0,
-            createdById: session.user.id,
-          }
-        });
       }
 
       // Create history entry
       await tx.noteHistory.create({
         data: {
           noteId: newNote.id,
-          content: JSON.stringify(data.content || []),
+          content: data.content || JSON.stringify(data.blocks || []),
           title: data.title || 'Untitled',
           version: 1,
           changeBy: session.user.id
@@ -222,6 +228,11 @@ export async function POST(request: NextRequest) {
             id: true,
             name: true,
             color: true,
+          }
+        },
+        blocks: {
+          orderBy: {
+            position: 'asc'
           }
         },
         children: {

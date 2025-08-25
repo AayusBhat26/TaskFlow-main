@@ -499,6 +499,7 @@ model Note {
   title         String?            @default("Untitled")
   icon          String?
   coverImage    String?
+  content       String?            @db.Text
   isPublic      Boolean            @default(false)
   isArchived    Boolean            @default(false)
   isFavorite    Boolean            @default(false)

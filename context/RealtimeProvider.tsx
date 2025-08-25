@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 
 interface RealtimeContextType {
   broadcastMessage: (workspaceId: string, message: any) => void;
@@ -21,14 +21,14 @@ interface RealtimeProviderProps {
 export function RealtimeProvider({ children }: RealtimeProviderProps) {
   const [subscribers, setSubscribers] = useState<Map<string, Set<(message: any) => void>>>(new Map());
 
-  const broadcastMessage = (workspaceId: string, message: any) => {
+  const broadcastMessage = useCallback((workspaceId: string, message: any) => {
     const workspaceSubscribers = subscribers.get(workspaceId);
     if (workspaceSubscribers) {
       workspaceSubscribers.forEach(callback => callback(message));
     }
-  };
+  }, [subscribers]);
 
-  const subscribeToWorkspace = (workspaceId: string, callback: (message: any) => void) => {
+  const subscribeToWorkspace = useCallback((workspaceId: string, callback: (message: any) => void) => {
     setSubscribers(prev => {
       const newMap = new Map(prev);
       if (!newMap.has(workspaceId)) {
@@ -52,10 +52,15 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
         return newMap;
       });
     };
-  };
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    broadcastMessage,
+    subscribeToWorkspace,
+  }), [broadcastMessage, subscribeToWorkspace]);
 
   return (
-    <RealtimeContext.Provider value={{ broadcastMessage, subscribeToWorkspace }}>
+    <RealtimeContext.Provider value={contextValue}>
       {children}
     </RealtimeContext.Provider>
   );

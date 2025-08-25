@@ -1,9 +1,9 @@
-import { Suspense } from 'react';
+import { OpenSidebar } from '@/components/header/OpenSidebar';
+import { NotesApp } from '@/components/notes/NotesApp';
 import { getAuthSession } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { redirect } from 'next/navigation';
-import { NotesApp } from '@/components/notes/NotesApp';
-import { OpenSidebar } from '@/components/header/OpenSidebar';
+import { Suspense } from 'react';
 
 async function getUserNotes(userId: string) {
   try {
@@ -27,6 +27,11 @@ async function getUserNotes(userId: string) {
             id: true,
             name: true,
             color: true,
+          }
+        },
+        blocks: {
+          orderBy: {
+            position: 'asc'
           }
         },
         children: {
@@ -66,7 +71,7 @@ async function getUserWorkspaces(userId: string) {
       where: {
         OR: [
           { creatorId: userId },
-          { 
+          {
             subscribers: {
               some: { userId }
             }
@@ -93,9 +98,9 @@ async function getUserWorkspaces(userId: string) {
 
 function NotesLoading() {
   return (
-    <div className="flex h-full">
+    <div className="flex h-full bg-background">
       {/* Sidebar skeleton */}
-      <div className="w-80 border-r border-border bg-muted/50 p-4">
+      <div className="w-80 border-r border-border bg-background p-4">
         <div className="space-y-3">
           <div className="h-8 bg-muted rounded animate-pulse"></div>
           <div className="h-6 bg-muted rounded animate-pulse"></div>
@@ -103,9 +108,9 @@ function NotesLoading() {
           <div className="h-6 bg-muted rounded animate-pulse"></div>
         </div>
       </div>
-      
+
       {/* Main content skeleton */}
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-8 bg-background">
         <div className="space-y-4">
           <div className="h-12 bg-muted rounded animate-pulse"></div>
           <div className="h-6 bg-muted rounded animate-pulse"></div>
@@ -119,7 +124,7 @@ function NotesLoading() {
 
 export default async function NotesPage() {
   const session = await getAuthSession();
-  
+
   if (!session?.user?.id) {
     redirect('/auth/signin');
   }
@@ -152,9 +157,9 @@ export default async function NotesPage() {
       <div className="absolute top-4 left-4 z-50 lg:hidden">
         <OpenSidebar />
       </div>
-      
+
       <Suspense fallback={<NotesLoading />}>
-        <NotesApp 
+        <NotesApp
           notes={transformedNotes}
           workspaces={workspaces}
           currentUser={currentUser}

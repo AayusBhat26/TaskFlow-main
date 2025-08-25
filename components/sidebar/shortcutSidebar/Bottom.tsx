@@ -38,15 +38,17 @@ export const Bottom = () => {
         </HoverCardTrigger>
       </HoverCard>
       <HoverCard openDelay={250} closeDelay={250}>
-        <HoverCardTrigger tabIndex={1}>
-          <ActiveLink
-            include="settings"
-            variant={"ghost"}
-            size={"icon"}
-            href="/dashboard/settings"
-          >
-            <Settings2 />
-          </ActiveLink>
+        <HoverCardTrigger asChild>
+          <div>
+            <ActiveLink
+              include="settings"
+              variant={"ghost"}
+              size={"icon"}
+              href="/dashboard/settings"
+            >
+              <Settings2 />
+            </ActiveLink>
+          </div>
         </HoverCardTrigger>
         <HoverCardContent align="start">
           <span>{t("MAIN.SETTINGS_HOVER")}</span>

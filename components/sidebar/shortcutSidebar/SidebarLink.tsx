@@ -22,14 +22,16 @@ export const SidebarLink = ({ hoverTextKey, href, Icon, include }: Props) => {
   return (
     <HoverCard openDelay={250} closeDelay={250}>
       <HoverCardTrigger asChild>
-        <ActiveLink
-          include={include}
-          variant={"ghost"}
-          size={"icon"}
-          href={href}
-        >
-          <Icon />
-        </ActiveLink>
+        <div>
+          <ActiveLink
+            include={include}
+            variant={"ghost"}
+            size={"icon"}
+            href={href}
+          >
+            <Icon />
+          </ActiveLink>
+        </div>
       </HoverCardTrigger>
       <HoverCardContent align="start">
         <span>{t(hoverTextKey)}</span>

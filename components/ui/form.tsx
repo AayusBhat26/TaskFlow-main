@@ -1,8 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import * as React from "react"
-import * as LabelPrimitive from "@radix-ui/react-label"
-import { Slot } from "@radix-ui/react-slot"
 import {
   Controller,
   ControllerProps,
@@ -11,10 +10,9 @@ import {
   FormProvider,
   useFormContext,
 } from "react-hook-form"
-import { useTranslations } from "next-intl"
 
-import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
 
 const Form = FormProvider
 
@@ -88,8 +86,8 @@ const FormItem = React.forwardRef<
 FormItem.displayName = "FormItem"
 
 const FormLabel = React.forwardRef<
-  React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
+  HTMLLabelElement,
+  React.LabelHTMLAttributes<HTMLLabelElement>
 >(({ className, ...props }, ref) => {
   const { error, formItemId } = useFormField()
 
@@ -105,23 +103,30 @@ const FormLabel = React.forwardRef<
 FormLabel.displayName = "FormLabel"
 
 const FormControl = React.forwardRef<
-  React.ElementRef<typeof Slot>,
-  React.ComponentPropsWithoutRef<typeof Slot>
->(({ ...props }, ref) => {
+  HTMLElement,
+  React.HTMLAttributes<HTMLElement> & { asChild?: boolean }
+>(({ asChild, ...props }, ref) => {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
 
+  const controlProps = {
+    id: formItemId,
+    'aria-describedby': !error
+      ? `${formDescriptionId}`
+      : `${formDescriptionId} ${formMessageId}`,
+    'aria-invalid': !!error,
+    ...props
+  }
+
+  if (asChild && React.isValidElement(props.children)) {
+    return React.cloneElement(props.children, {
+      ...props.children.props,
+      ...controlProps,
+      ref
+    })
+  }
+
   return (
-    <Slot
-      ref={ref}
-      id={formItemId}
-      aria-describedby={
-        !error
-          ? `${formDescriptionId}`
-          : `${formDescriptionId} ${formMessageId}`
-      }
-      aria-invalid={!!error}
-      {...props}
-    />
+    <div ref={ref as React.RefObject<HTMLDivElement>} {...controlProps} />
   )
 })
 FormControl.displayName = "FormControl"
@@ -149,11 +154,11 @@ const FormMessage = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   const { error, formMessageId } = useFormField()
   const t = useTranslations("MESSAGES.SCHEMA")
-  
+
   // Function to translate schema validation error messages
   const translateErrorMessage = (message: string): string => {
     // Check if the message is a schema translation key (starts with "SCHEMA.")
-    if (message.startsWith("MESSAGE.SCHEMA.")) {
+    if (message.startsWith("SCHEMA.")) {
       try {
         // Remove "SCHEMA." prefix and translate
         const key = message.substring(7) // Remove "SCHEMA." prefix
@@ -165,7 +170,7 @@ const FormMessage = React.forwardRef<
     }
     return message
   }
-  
+
   const body = error ? translateErrorMessage(String(error?.message)) : children
 
   if (!body) {
@@ -186,12 +191,8 @@ const FormMessage = React.forwardRef<
 FormMessage.displayName = "FormMessage"
 
 export {
-  useFormField,
-  Form,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormDescription,
-  FormMessage,
-  FormField,
+  Form, FormControl,
+  FormDescription, FormField, FormItem,
+  FormLabel, FormMessage, useFormField
 }
+

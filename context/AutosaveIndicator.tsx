@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useCallback, useMemo } from "react";
 
 interface Props {
   children: React.ReactNode;
@@ -19,12 +19,18 @@ export const AutosaveIndicatorProvider = ({ children }: Props) => {
     "saved"
   );
 
-  const onSetStatus = (status: "unsaved" | "saved" | "pending") => {
+  const onSetStatus = useCallback((status: "unsaved" | "saved" | "pending") => {
     setStatus(status);
-  };
+  }, []);
+
+  // Memoize the context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    status,
+    onSetStatus
+  }), [status, onSetStatus]);
 
   return (
-    <AutosaveIndicatorCtx.Provider value={{ status, onSetStatus }}>
+    <AutosaveIndicatorCtx.Provider value={contextValue}>
       {children}
     </AutosaveIndicatorCtx.Provider>
   );
