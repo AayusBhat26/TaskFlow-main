@@ -58,6 +58,21 @@ export async function GET(request: NextRequest) {
       emailIds: user.emailIds || [],
     });
 
+    console.log('Fetched external data:', {
+      leetcode: !!externalData.leetcode,
+      codeforces: !!externalData.codeforces,
+      github: !!externalData.github,
+      reddit: !!externalData.reddit,
+      email: !!externalData.email,
+      userServices: {
+        leetcodeUsername: user.leetcodeUsername,
+        codeforcesUsername: user.codeforcesUsername,
+        redditUsername: user.redditUsername,
+        githubUsername: user.githubUsername,
+        emailIds: user.emailIds,
+      }
+    });
+
     // Generate insights and daily digest
     const insights = aggregator.generateUserInsights(externalData);
     const dailyDigest = aggregator.generateDailyDigest(externalData);
@@ -105,6 +120,9 @@ export async function POST(request: NextRequest) {
 
     // Fetch data for specific service
     switch (service.toLowerCase()) {
+      case 'leetcode':
+        data = await aggregator.fetchLeetCodeData(username);
+        break;
       case 'codeforces':
         data = await aggregator.fetchCodeforcesData(username);
         break;

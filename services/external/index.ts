@@ -70,20 +70,48 @@ export class ExternalServicesAggregator {
 
     // Fetch GitHub data
     if (userServices.githubUsername) {
+      console.log(`🔍 ExternalServicesAggregator: Starting GitHub fetch for ${userServices.githubUsername}`);
       fetchPromises.push(
         this.githubService.getUserStats(userServices.githubUsername)
-          .then(data => { results.github = data || undefined; })
-          .catch(error => console.error('GitHub fetch error:', error))
+          .then(data => { 
+            console.log(`🔍 ExternalServicesAggregator: GitHub fetch result:`, !!data);
+            results.github = data || undefined; 
+          })
+          .catch(error => {
+            console.error(`❌ ExternalServicesAggregator: GitHub fetch error for ${userServices.githubUsername}:`, error);
+          })
       );
+    } else {
+      console.log(`⚠️ ExternalServicesAggregator: No GitHub username provided`);
     }
 
     // Fetch Reddit data
     if (userServices.redditUsername) {
+      console.log(`🔍 ExternalServicesAggregator: Starting Reddit fetch for ${userServices.redditUsername}`);
       fetchPromises.push(
         this.redditService.getUserStats(userServices.redditUsername)
-          .then(data => { results.reddit = data || undefined; })
-          .catch(error => console.error('Reddit fetch error:', error))
+          .then(data => { 
+            console.log(`🔍 ExternalServicesAggregator: Reddit fetch result:`, !!data);
+            if (data) {
+              console.log(`✅ ExternalServicesAggregator: Reddit data successfully fetched for ${userServices.redditUsername}:`, {
+                karma: data.totalKarma,
+                posts: data.postsCount,
+                accountAge: data.accountAge
+              });
+            }
+            results.reddit = data || undefined; 
+          })
+          .catch(error => {
+            console.error(`❌ ExternalServicesAggregator: Reddit fetch error for ${userServices.redditUsername}:`, {
+              message: error.message,
+              code: error.code,
+              type: error.constructor.name
+            });
+            // Don't set reddit to undefined, leave it unset so the UI knows it failed to load
+          })
       );
+    } else {
+      console.log(`⚠️ ExternalServicesAggregator: No Reddit username provided`);
     }
 
     // Fetch Email data

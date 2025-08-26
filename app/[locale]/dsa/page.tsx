@@ -91,6 +91,7 @@ export default function DSAPracticePage() {
   const router = useRouter();
   const [questions, setQuestions] = useState<DSAQuestion[]>([]);
   const [stats, setStats] = useState<DSAStats>({ total: 0, completed: 0, inProgress: 0, completionPercentage: 0 });
+  const [overallStats, setOverallStats] = useState<DSAStats>({ total: 0, completed: 0, inProgress: 0, completionPercentage: 0 });
   const [topicProgress, setTopicProgress] = useState<TopicProgress[]>([]);
   const [importBatches, setImportBatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,11 +118,59 @@ export default function DSAPracticePage() {
     }
   };
 
+  // Fetch comprehensive stats (both curated and imported)
+  const fetchOverallStats = async () => {
+    try {
+      console.log('🔍 Fetching overall stats...');
+      const response = await fetch(`/api/dsa/all-stats?t=${Date.now()}`, {
+        cache: 'no-store'
+      });
+      const data = await response.json();
+      
+      console.log('📊 All-stats API response:', data);
+      
+      if (data.overall) {
+        console.log('✅ Setting overall stats:', {
+          total: data.overall.total,
+          completed: data.overall.solved,
+          inProgress: data.overall.inProgress,
+          completionPercentage: data.overall.completionPercentage
+        });
+        setOverallStats({
+          total: data.overall.total,
+          completed: data.overall.solved,
+          inProgress: data.overall.inProgress,
+          completionPercentage: data.overall.completionPercentage
+        });
+      } else {
+        console.error('❌ No overall stats in response:', data);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching overall stats:', error);
+    }
+  };
+
   // Load initial data
   useEffect(() => {
+    console.log('🚀 DSA Page mounting, loading initial data...');
     fetchQuestions();
     fetchImportBatches();
+    fetchOverallStats();
   }, [selectedTopic, selectedDifficulty, selectedStatus, searchQuery]);
+
+  // Listen for progress updates from ImportedQuestionsTab
+  useEffect(() => {
+    const handleProgressUpdate = () => {
+      console.log('📡 Received progress update event, refreshing overall stats...');
+      fetchOverallStats();
+    };
+
+    window.addEventListener('dsaProgressUpdated', handleProgressUpdate);
+    
+    return () => {
+      window.removeEventListener('dsaProgressUpdated', handleProgressUpdate);
+    };
+  }, []);
 
   const fetchQuestions = async () => {
     try {
@@ -155,6 +204,7 @@ export default function DSAPracticePage() {
 
   const updateProgress = async (questionId: string, status: string, notes?: string, rating?: number) => {
     try {
+      console.log('🔄 Updating progress:', { questionId, status });
       const response = await fetch('/api/dsa/progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -167,17 +217,23 @@ export default function DSAPracticePage() {
       });
 
       const data = await response.json();
+      console.log('📊 Progress API response:', data);
 
       if (data.success) {
         toast({
           title: status === 'COMPLETED' ? '🎉 Question Completed!' : 'Success',
           description: data.message
         });
-        fetchQuestions(); // Refresh data
+        // Refresh both filtered questions and overall stats
+        console.log('🔄 Refreshing questions and overall stats...');
+        await fetchQuestions();
+        await fetchOverallStats();
+        console.log('✅ Refresh completed');
       } else {
         throw new Error(data.error);
       }
     } catch (error) {
+      console.error('❌ Update progress error:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to update progress',
@@ -257,7 +313,8 @@ export default function DSAPracticePage() {
                 <Target className="w-5 h-5 text-blue-500" />
                 <div>
                   <p className="text-sm text-muted-foreground">Total Questions</p>
-                  <p className="text-2xl font-bold">{stats.total}</p>
+                  <p className="text-2xl font-bold">{overallStats.total}</p>
+                  <p className="text-xs text-muted-foreground">Curated + Imported</p>
                 </div>
               </div>
             </CardContent>
@@ -269,7 +326,8 @@ export default function DSAPracticePage() {
                 <CheckCircle2 className="w-5 h-5 text-green-500" />
                 <div>
                   <p className="text-sm text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold">{stats.completed}</p>
+                  <p className="text-2xl font-bold">{overallStats.completed}</p>
+                  <p className="text-xs text-muted-foreground">All questions</p>
                 </div>
               </div>
             </CardContent>
@@ -281,7 +339,8 @@ export default function DSAPracticePage() {
                 <Clock className="w-5 h-5 text-orange-500" />
                 <div>
                   <p className="text-sm text-muted-foreground">In Progress</p>
-                  <p className="text-2xl font-bold">{stats.inProgress}</p>
+                  <p className="text-2xl font-bold">{overallStats.inProgress}</p>
+                  <p className="text-xs text-muted-foreground">All questions</p>
                 </div>
               </div>
             </CardContent>
@@ -293,7 +352,8 @@ export default function DSAPracticePage() {
                 <TrendingUp className="w-5 h-5 text-purple-500" />
                 <div>
                   <p className="text-sm text-muted-foreground">Progress</p>
-                  <p className="text-2xl font-bold">{stats.completionPercentage}%</p>
+                  <p className="text-2xl font-bold">{overallStats.completionPercentage}%</p>
+                  <p className="text-xs text-muted-foreground">Overall completion</p>
                 </div>
               </div>
             </CardContent>
@@ -307,10 +367,10 @@ export default function DSAPracticePage() {
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Overall Progress</span>
                 <span className="text-sm text-muted-foreground">
-                  {stats.completed} / {stats.total} questions completed
+                  {overallStats.completed} / {overallStats.total} questions completed
                 </span>
               </div>
-              <Progress value={stats.completionPercentage} className="w-full" />
+              <Progress value={overallStats.completionPercentage} className="w-full" />
             </div>
           </CardContent>
         </Card>
@@ -406,155 +466,193 @@ export default function DSAPracticePage() {
                   return (
                     <Card key={question.id} className="hover:shadow-md transition-shadow">
                       <CardContent className="p-4">
-                        <div className="flex items-start gap-4">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="p-0 h-auto"
-                            onClick={() => {
-                              const newStatus = status === 'COMPLETED' ? 'TODO' : 'COMPLETED';
-                              // Play sound for completion
-                              if (newStatus === 'COMPLETED') {
-                                playQuestionCompletionSound();
-                              }
-                              updateProgress(question.id, newStatus);
-                            }}
-                          >
-                            {getStatusIcon(status)}
-                          </Button>
+                        <div className="flex items-center gap-4">
+                          {/* Question content - 80% width */}
+                          <div className="flex-1 space-y-2" style={{width: '80%'}}>
+                            <div className="flex items-start">
+                              <div className="flex-1 space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="space-y-1">
+                                    <h3 className="font-semibold text-lg">{question.title}</h3>
+                                    {question.description && (
+                                      <p className="text-sm text-muted-foreground line-clamp-2">
+                                        {question.description}
+                                      </p>
+                                    )}
+                                  </div>
 
-                          <div className="flex-1 space-y-2">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="space-y-1">
-                                <h3 className="font-semibold text-lg">{question.title}</h3>
-                                {question.description && (
-                                  <p className="text-sm text-muted-foreground line-clamp-2">
-                                    {question.description}
-                                  </p>
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    <Badge className={cn("text-xs", difficultyColors[question.difficulty])}>
+                                      {question.difficulty}
+                                    </Badge>
+                                    {question.frequency > 5 && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        <Star className="w-3 h-3 mr-1" />
+                                        High Freq
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs">
+                                    {question.topic}
+                                  </span>
+                                  <span>{question.platform}</span>
+                                  {progress && (
+                                    <>
+                                      <span>Attempts: {progress.attempts}</span>
+                                      <span>Time: {progress.timeSpent}m</span>
+                                    </>
+                                  )}
+                                </div>
+
+                                {question.tags.length > 0 && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {question.tags.slice(0, 3).map((tag, index) => (
+                                      <Badge key={index} variant="outline" className="text-xs">
+                                        {tag}
+                                      </Badge>
+                                    ))}
+                                    {question.tags.length > 3 && (
+                                      <Badge variant="outline" className="text-xs">
+                                        +{question.tags.length - 3}
+                                      </Badge>
+                                    )}
+                                  </div>
                                 )}
-                              </div>
 
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <Badge className={cn("text-xs", difficultyColors[question.difficulty])}>
-                                  {question.difficulty}
-                                </Badge>
-                                {question.frequency > 5 && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    <Star className="w-3 h-3 mr-1" />
-                                    High Freq
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs">
-                                {question.topic}
-                              </span>
-                              <span>{question.platform}</span>
-                              {progress && (
-                                <>
-                                  <span>Attempts: {progress.attempts}</span>
-                                  <span>Time: {progress.timeSpent}m</span>
-                                </>
-                              )}
-                            </div>
-
-                            {question.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {question.tags.slice(0, 3).map((tag, index) => (
-                                  <Badge key={index} variant="outline" className="text-xs">
-                                    {tag}
-                                  </Badge>
-                                ))}
-                                {question.tags.length > 3 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{question.tags.length - 3}
-                                  </Badge>
-                                )}
-                              </div>
-                            )}
-
-                            <div className="flex items-center gap-2">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedQuestion(question);
-                                      setProgressNotes(progress?.notes || '');
-                                      setProgressRating(progress?.rating || 0);
-                                    }}
-                                  >
-                                    Update Progress
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>Update Progress - {question.title}</DialogTitle>
-                                  </DialogHeader>
-                                  <div className="space-y-4">
-                                    <div>
-                                      <label className="text-sm font-medium">Status</label>
-                                      <Select 
-                                        defaultValue={status}
-                                        onValueChange={(value) => {
-                                          // Play sound for completion
-                                          if (value === 'COMPLETED') {
-                                            playQuestionCompletionSound();
-                                          }
-                                          updateProgress(question.id, value, progressNotes, progressRating);
+                                <div className="flex items-center gap-2">
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          setSelectedQuestion(question);
+                                          setProgressNotes(progress?.notes || '');
+                                          setProgressRating(progress?.rating || 0);
                                         }}
                                       >
-                                        <SelectTrigger>
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="TODO">To Do</SelectItem>
-                                          <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                                          <SelectItem value="COMPLETED">Completed</SelectItem>
-                                          <SelectItem value="REVIEW">Review</SelectItem>
-                                          <SelectItem value="SKIPPED">Skipped</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-
-                                    <div>
-                                      <label className="text-sm font-medium">Notes</label>
-                                      <Textarea
-                                        placeholder="Add your notes, approach, or solution..."
-                                        value={progressNotes}
-                                        onChange={(e) => setProgressNotes(e.target.value)}
-                                      />
-                                    </div>
-
-                                    <div>
-                                      <label className="text-sm font-medium">Difficulty Rating (1-5)</label>
-                                      <div className="flex gap-1 mt-1">
-                                        {[1, 2, 3, 4, 5].map((rating) => (
-                                          <Button
-                                            key={rating}
-                                            variant={progressRating >= rating ? "default" : "outline"}
-                                            size="sm"
-                                            onClick={() => setProgressRating(rating)}
+                                        Update Progress
+                                      </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                      <DialogHeader>
+                                        <DialogTitle>Update Progress - {question.title}</DialogTitle>
+                                      </DialogHeader>
+                                      <div className="space-y-4">
+                                        <div>
+                                          <label className="text-sm font-medium">Status</label>
+                                          <Select 
+                                            defaultValue={status}
+                                            onValueChange={(value) => {
+                                              // Play sound for completion
+                                              if (value === 'COMPLETED') {
+                                                playQuestionCompletionSound();
+                                              }
+                                              updateProgress(question.id, value, progressNotes, progressRating);
+                                            }}
                                           >
-                                            <Star className="w-4 h-4" />
-                                          </Button>
-                                        ))}
-                                      </div>
-                                    </div>
+                                            <SelectTrigger>
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="TODO">To Do</SelectItem>
+                                              <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                                              <SelectItem value="COMPLETED">Completed</SelectItem>
+                                              <SelectItem value="REVIEW">Review</SelectItem>
+                                              <SelectItem value="SKIPPED">Skipped</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
 
+                                        <div>
+                                          <label className="text-sm font-medium">Notes</label>
+                                          <Textarea
+                                            placeholder="Add your notes, approach, or solution..."
+                                            value={progressNotes}
+                                            onChange={(e) => setProgressNotes(e.target.value)}
+                                          />
+                                        </div>
+
+                                        <div>
+                                          <label className="text-sm font-medium">Difficulty Rating (1-5)</label>
+                                          <div className="flex gap-1 mt-1">
+                                            {[1, 2, 3, 4, 5].map((rating) => (
+                                              <Button
+                                                key={rating}
+                                                variant={progressRating >= rating ? "default" : "outline"}
+                                                size="sm"
+                                                onClick={() => setProgressRating(rating)}
+                                              >
+                                                <Star className="w-4 h-4" />
+                                              </Button>
+                                            ))}
+                                          </div>
+                                        </div>
+
+                                        <Button
+                                          onClick={() => updateProgress(question.id, status, progressNotes, progressRating)}
+                                          className="w-full"
+                                        >
+                                          Save Progress
+                                        </Button>
+                                      </div>
+                                    </DialogContent>
+                                  </Dialog>
+                                  {question.leetcodeUrl && (
                                     <Button
-                                      onClick={() => updateProgress(question.id, status, progressNotes, progressRating)}
-                                      className="w-full"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => window.open(question.leetcodeUrl, '_blank')}
                                     >
-                                      Save Progress
+                                      <ExternalLink className="w-4 h-4 mr-1" />
+                                      View Problem
                                     </Button>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
+                                  )}
+                                </div>
+                              </div>
                             </div>
+                          </div>
+                          
+                          {/* Completion button - 20% width */}
+                          <div className="flex flex-col items-center gap-2" style={{width: '20%'}}>
+                            <Button
+                              onClick={() => {
+                                console.log('🔴 BUTTON CLICKED! Question:', question.id, 'Current status:', status);
+                                const newStatus = status === 'COMPLETED' ? 'TODO' : 'COMPLETED';
+                                console.log('🔄 New status will be:', newStatus);
+                                // Play sound for completion
+                                if (newStatus === 'COMPLETED') {
+                                  playQuestionCompletionSound();
+                                }
+                                updateProgress(question.id, newStatus);
+                              }}
+                              className={cn(
+                                "w-full",
+                                status === 'COMPLETED' 
+                                  ? "bg-green-500 hover:bg-green-600 text-white" 
+                                  : "bg-primary hover:bg-primary/90"
+                              )}
+                            >
+                              {status === 'COMPLETED' ? (
+                                <>
+                                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                                  Completed
+                                </>
+                              ) : (
+                                <>
+                                  <Circle className="w-4 h-4 mr-2" />
+                                  Mark Complete
+                                </>
+                              )}
+                            </Button>
+                            {progress && progress.attempts > 0 && (
+                              <span className="text-xs text-muted-foreground text-center">
+                                {progress.attempts} attempt{progress.attempts !== 1 ? 's' : ''}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </CardContent>

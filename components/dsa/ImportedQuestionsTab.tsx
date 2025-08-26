@@ -21,6 +21,7 @@ import {
   Target
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { playQuestionCompletionSound } from '@/lib/soundEffects';
 
 interface ImportedQuestion {
   id: string;
@@ -118,6 +119,47 @@ export function ImportedQuestionsTab({ batchId }: ImportedQuestionsTabProps = {}
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateProgress = async (questionId: string, status: string) => {
+    try {
+      console.log('🔄 ImportedQuestionsTab updateProgress called:', { questionId, status });
+      const response = await fetch('/api/dsa/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          questionId,
+          status
+        })
+      });
+
+      const data = await response.json();
+      console.log('📊 ImportedQuestionsTab Progress API response:', data);
+
+      if (data.success) {
+        toast({
+          title: status === 'COMPLETED' ? '🎉 Question Completed!' : 'Success',
+          description: data.message
+        });
+        
+        // Refresh local data
+        console.log('🔄 Refreshing imported questions data...');
+        fetchImportedQuestions();
+        
+        // Try to refresh parent page stats by dispatching a custom event
+        console.log('📡 Dispatching refresh event to parent...');
+        window.dispatchEvent(new CustomEvent('dsaProgressUpdated'));
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      console.error('❌ ImportedQuestionsTab update error:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update progress',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -320,67 +362,121 @@ export function ImportedQuestionsTab({ batchId }: ImportedQuestionsTabProps = {}
               </CardContent>
             </Card>
           ) : (
-            data.questions.map((question) => (
-              <Card key={question.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3 flex-1">
-                      {getStatusIcon(question.userProgress?.status)}
-                      
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-medium">{question.title}</h3>
-                          <Badge
-                            variant="outline"
-                            className={cn("text-xs", difficultyColors[question.difficulty])}
-                          >
-                            {question.difficulty}
-                          </Badge>
-                          <Badge variant="secondary" className="text-xs">
-                            {question.topic}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {question.platform}
-                          </Badge>
-                        </div>
-                        
-                        {question.description && (
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {question.description}
-                          </p>
-                        )}
-                        
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span>From: {question.originalFileName}</span>
-                          <span>Imported: {formatDate(question.importedAt)}</span>
-                          {question.userProgress && question.userProgress.attempts > 0 && (
-                            <span>{question.userProgress.attempts} attempts</span>
-                          )}
-                        </div>
-                        
-                        {question.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {question.tags.slice(0, 3).map((tag) => (
-                              <Badge key={tag} variant="outline" className="text-xs">
-                                {tag}
+            data.questions.map((question) => {
+              const status = question.userProgress?.status || 'TODO';
+              
+              return (
+                <Card key={question.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      {/* Question content - 80% width */}
+                      <div className="flex-1 space-y-2" style={{width: '80%'}}>
+                        <div className="flex items-start">
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-medium">{question.title}</h3>
+                              <Badge
+                                variant="outline"
+                                className={cn("text-xs", difficultyColors[question.difficulty])}
+                              >
+                                {question.difficulty}
                               </Badge>
-                            ))}
-                            {question.tags.length > 3 && (
+                              <Badge variant="secondary" className="text-xs">
+                                {question.topic}
+                              </Badge>
                               <Badge variant="outline" className="text-xs">
-                                +{question.tags.length - 3} more
+                                {question.platform}
                               </Badge>
+                            </div>
+                            
+                            {question.description && (
+                              <p className="text-sm text-muted-foreground line-clamp-2">
+                                {question.description}
+                              </p>
                             )}
+                            
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                              <span>From: {question.originalFileName}</span>
+                              <span>Imported: {formatDate(question.importedAt)}</span>
+                              {question.userProgress && question.userProgress.attempts > 0 && (
+                                <span>{question.userProgress.attempts} attempts</span>
+                              )}
+                            </div>
+                            
+                            {question.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {question.tags.slice(0, 3).map((tag) => (
+                                  <Badge key={tag} variant="outline" className="text-xs">
+                                    {tag}
+                                  </Badge>
+                                ))}
+                                {question.tags.length > 3 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{question.tags.length - 3} more
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+                            
+                            <div className="flex items-center gap-2">
+                              {question.leetcodeUrl && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.open(question.leetcodeUrl, '_blank')}
+                                >
+                                  <ExternalLink className="w-4 h-4 mr-1" />
+                                  View Problem
+                                </Button>
+                              )}
+                            </div>
                           </div>
+                        </div>
+                      </div>
+                      
+                      {/* Completion button - 20% width */}
+                      <div className="flex flex-col items-center gap-2" style={{width: '20%'}}>
+                        <Button
+                          onClick={() => {
+                            console.log('🔴 IMPORTED BUTTON CLICKED! Question:', question.id, 'Current status:', status);
+                            const newStatus = status === 'COMPLETED' ? 'TODO' : 'COMPLETED';
+                            console.log('🔄 New status will be:', newStatus);
+                            // Play sound for completion
+                            if (newStatus === 'COMPLETED') {
+                              playQuestionCompletionSound();
+                            }
+                            updateProgress(question.id, newStatus);
+                          }}
+                          className={cn(
+                            "w-full",
+                            status === 'COMPLETED' 
+                              ? "bg-green-500 hover:bg-green-600 text-white" 
+                              : "bg-primary hover:bg-primary/90"
+                          )}
+                        >
+                          {status === 'COMPLETED' ? (
+                            <>
+                              <CheckCircle2 className="w-4 h-4 mr-2" />
+                              Completed
+                            </>
+                          ) : (
+                            <>
+                              <Circle className="w-4 h-4 mr-2" />
+                              Mark Complete
+                            </>
+                          )}
+                        </Button>
+                        {question.userProgress && question.userProgress.attempts > 0 && (
+                          <span className="text-xs text-muted-foreground text-center">
+                            {question.userProgress.attempts} attempt{question.userProgress.attempts !== 1 ? 's' : ''}
+                          </span>
                         )}
                       </div>
                     </div>
-                    
-                    <div className="flex items-center gap-2 ml-4">
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </div>
       </ScrollArea>

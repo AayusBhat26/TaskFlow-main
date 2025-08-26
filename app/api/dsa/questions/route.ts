@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Calculate statistics
+    // Calculate statistics for filtered questions (only current view)
     const totalQuestions = filteredQuestions.length;
     const completedQuestions = filteredQuestions.filter(q => 
       q.progress.length > 0 && q.progress[0].status === 'COMPLETED'
@@ -93,7 +93,29 @@ export async function GET(req: NextRequest) {
       q.progress.length > 0 && q.progress[0].status === 'IN_PROGRESS'
     ).length;
 
-    // Get topic-wise progress
+    // Get comprehensive statistics for ALL questions (both curated and imported)
+    const [allQuestionsCount, allCompletedCount, allInProgressCount] = await Promise.all([
+      // Total questions count (all questions)
+      db.dSAQuestion.count(),
+      
+      // Total completed questions (all questions)
+      db.dSAProgress.count({
+        where: {
+          userId: session.user.id,
+          status: 'COMPLETED'
+        }
+      }),
+      
+      // Total in-progress questions (all questions)
+      db.dSAProgress.count({
+        where: {
+          userId: session.user.id,
+          status: 'IN_PROGRESS'
+        }
+      })
+    ]);
+
+    // Get topic-wise progress for ALL questions (both curated and imported)
     const allTopics = await db.dSAQuestion.groupBy({
       by: ['topic'],
       _count: {
@@ -133,10 +155,18 @@ export async function GET(req: NextRequest) {
       success: true,
       questions: filteredQuestions,
       stats: {
-        total: totalQuestions,
-        completed: completedQuestions,
-        inProgress: inProgressQuestions,
-        completionPercentage: totalQuestions > 0 ? Math.round((completedQuestions / totalQuestions) * 100) : 0
+        // Use comprehensive stats for main display
+        total: allQuestionsCount,
+        completed: allCompletedCount,
+        inProgress: allInProgressCount,
+        completionPercentage: allQuestionsCount > 0 ? Math.round((allCompletedCount / allQuestionsCount) * 100) : 0,
+        // Also include filtered view stats
+        filtered: {
+          total: totalQuestions,
+          completed: completedQuestions,
+          inProgress: inProgressQuestions,
+          completionPercentage: totalQuestions > 0 ? Math.round((completedQuestions / totalQuestions) * 100) : 0
+        }
       },
       topicProgress
     });

@@ -90,8 +90,7 @@ export const NotificationItem = ({
       });
     },
     onSettled: () => {
-      //@ts-ignore
-      queryClient.invalidateQueries["getUserNotifications"];
+      queryClient.invalidateQueries({ queryKey: ["getUserNotifications"] });
     },
     mutationKey: ["updateToClickStatus"],
   });

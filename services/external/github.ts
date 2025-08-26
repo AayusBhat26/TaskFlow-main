@@ -93,19 +93,29 @@ export class GitHubService {
 
   async getUserStats(username: string): Promise<GitHubStats | null> {
     try {
+      console.log(`🔍 GitHubService: Fetching stats for username: ${username}`);
+      console.log(`🔑 GitHubService: Token available: ${!!this.token}`);
+      
       const [user, repositories, contributions] = await Promise.all([
         this.getUserInfo(username),
         this.getUserRepositories(username),
         this.getContributions(username)
       ]);
 
-      if (!user) return null;
+      console.log(`👤 GitHubService: User data fetched: ${!!user}`);
+      console.log(`📁 GitHubService: Repositories fetched: ${repositories?.length || 0}`);
+      console.log(`📊 GitHubService: Contributions fetched: ${contributions?.length || 0}`);
+
+      if (!user) {
+        console.error(`❌ GitHubService: No user data found for ${username}`);
+        return null;
+      }
 
       const recentCommits = await this.getRecentCommits(username, repositories?.slice(0, 5) || []);
       const languageStats = await this.getLanguageStats(username, repositories || []);
       const streakData = this.calculateStreaks(contributions || []);
 
-      return {
+      const stats = {
         user,
         repositories: repositories || [],
         recentCommits: recentCommits || [],
@@ -118,21 +128,39 @@ export class GitHubService {
         longestStreak: streakData.longestStreak,
         currentStreak: streakData.currentStreak,
       };
+
+      console.log(`✅ GitHubService: Successfully compiled stats for ${username}:`, {
+        repos: stats.repositories.length,
+        stars: stats.totalStars,
+        commits: stats.totalCommits
+      });
+
+      return stats;
     } catch (error) {
-      console.error('Error fetching GitHub data:', error);
+      console.error(`❌ GitHubService: Error fetching GitHub data for ${username}:`, error);
       return null;
     }
   }
 
   private async getUserInfo(username: string): Promise<GitHubUser | null> {
     try {
+      console.log(`🔍 GitHubService: Fetching user info for ${username}`);
       const response = await axios.get(`${this.baseUrl}/users/${username}`, {
         headers: this.getHeaders()
       });
 
+      console.log(`✅ GitHubService: User info fetched successfully for ${username}`);
       return response.data;
-    } catch (error) {
-      console.error('Error fetching GitHub user:', error);
+    } catch (error: any) {
+      console.error(`❌ GitHubService: Error fetching GitHub user ${username}:`, {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        message: error.message,
+        rateLimit: {
+          remaining: error.response?.headers['x-ratelimit-remaining'],
+          reset: error.response?.headers['x-ratelimit-reset']
+        }
+      });
       return null;
     }
   }

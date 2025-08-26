@@ -1,5 +1,5 @@
 "use client";
-import { Bell } from "lucide-react";
+import { Bell, RefreshCw } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   HoverCard,
@@ -34,6 +34,11 @@ export const NotificationContainer = ({ userId }: Props) => {
     UserNotification[]
   >([]);
   const [isAnyClickedFalse, setIsAnyClickedFalse] = useState(false);
+  const [isManualRefresh, setIsManualRefresh] = useState(false);
+
+  // Check if we have cached notifications data
+  const cachedData = queryClient.getQueryData<UserNotification[]>(["getUserNotifications"]);
+  const shouldFetchInitially = !cachedData;
 
   const {
     data: userNotifications,
@@ -53,8 +58,12 @@ export const NotificationContainer = ({ userId }: Props) => {
 
       return response;
     },
-    refetchInterval: 6000,
-    gcTime: 1 * 60 * 1000,
+    // Remove automatic polling - only fetch initially if no cached data
+    enabled: shouldFetchInitially || isManualRefresh,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh
+    gcTime: 10 * 60 * 1000, // 10 minutes cache time
     queryKey: ["getUserNotifications"],
   });
   const { mutate: updateAllToClickStatus } = useMutation({
@@ -96,8 +105,7 @@ export const NotificationContainer = ({ userId }: Props) => {
       });
     },
     onSettled: () => {
-      //@ts-ignore
-      queryClient.invalidateQueries["getUserNotifications"];
+      queryClient.invalidateQueries({ queryKey: ["getUserNotifications"] });
     },
     mutationKey: ["updateAllToClickStatus"],
   });
@@ -141,8 +149,7 @@ export const NotificationContainer = ({ userId }: Props) => {
       });
     },
     onSettled: () => {
-      //@ts-ignore
-      queryClient.invalidateQueries["getUserNotifications"];
+      queryClient.invalidateQueries({ queryKey: ["getUserNotifications"] });
     },
     mutationKey: ["updateToSeenNotifications"],
   });
@@ -164,6 +171,27 @@ export const NotificationContainer = ({ userId }: Props) => {
 
     updateToSeenNotifications();
   }, [open, unseenNotifications, updateToSeenNotifications]);
+
+  // Smart notification refreshing: only when popup opens or manual refresh
+  useEffect(() => {
+    if (open && userNotifications) {
+      // When popup opens, refresh notifications if data is older than 2 minutes
+      const lastFetch = queryClient.getQueryState(["getUserNotifications"])?.dataUpdatedAt;
+      const now = Date.now();
+      const twoMinutes = 2 * 60 * 1000;
+      
+      if (!lastFetch || (now - lastFetch) > twoMinutes) {
+        setIsManualRefresh(true);
+        refetch().finally(() => setIsManualRefresh(false));
+      }
+    }
+  }, [open, queryClient, refetch, userNotifications]);
+
+  // Manual refresh function for user-triggered refresh
+  const handleManualRefresh = () => {
+    setIsManualRefresh(true);
+    refetch().finally(() => setIsManualRefresh(false));
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -198,7 +226,7 @@ export const NotificationContainer = ({ userId }: Props) => {
         >
           {isError ? (
             <ClientError
-              onRefetch={refetch}
+              onRefetch={handleManualRefresh}
               className="bg-popover mt-0 sm:mt-0 md:mt-0"
               message={t("ERROR")}
             />
@@ -210,17 +238,29 @@ export const NotificationContainer = ({ userId }: Props) => {
             <div className="flex flex-col gap-6">
               <div className="flex gap-2 sm:gap-6 items-center justify-between">
                 <h4 className="font-medium leading-none">{t("TITLE")}</h4>
-                <Button
-                  disabled={!isAnyClickedFalse}
-                  onClick={() => {
-                    updateAllToClickStatus();
-                  }}
-                  className="text-xs"
-                  size={"sm"}
-                  variant={"secondary"}
-                >
-                  {t("MARK_AS_READ")}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={handleManualRefresh}
+                    disabled={isLoading || isManualRefresh}
+                    className="text-xs"
+                    size={"sm"}
+                    variant={"outline"}
+                  >
+                    <RefreshCw className={`w-3 h-3 mr-1 ${(isLoading || isManualRefresh) ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                  <Button
+                    disabled={!isAnyClickedFalse}
+                    onClick={() => {
+                      updateAllToClickStatus();
+                    }}
+                    className="text-xs"
+                    size={"sm"}
+                    variant={"secondary"}
+                  >
+                    {t("MARK_AS_READ")}
+                  </Button>
+                </div>
               </div>
               <ScrollArea
                 className={`${

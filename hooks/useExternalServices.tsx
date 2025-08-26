@@ -9,8 +9,12 @@ export interface UseExternalServicesOptions {
 }
 
 export const useExternalServices = (options: UseExternalServicesOptions = {}) => {
-  const { enabled = true, refetchInterval = 5 * 60 * 1000 } = options; // 5 minutes default
+  const { enabled = true, refetchInterval } = options;
   const queryClient = useQueryClient();
+  
+  // Check if we have cached data
+  const cachedData = queryClient.getQueryData(['external-services']);
+  const shouldFetchInitially = !cachedData;
 
   const {
     data,
@@ -24,10 +28,11 @@ export const useExternalServices = (options: UseExternalServicesOptions = {}) =>
       const response = await axios.get('/api/external-services');
       return response.data;
     },
-    enabled,
-    refetchInterval,
+    enabled: enabled && shouldFetchInitially, // Only fetch if no cached data exists
+    // Removed refetchInterval to prevent automatic API calls
     refetchOnWindowFocus: false,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchOnMount: false, // Don't refetch on mount, use cached data if available
+    staleTime: Infinity, // Data stays fresh until manually refreshed
   });
 
   const refreshMutation = useMutation({

@@ -91,7 +91,7 @@ export function DSAProgressDashboard() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 p-3 sm:p-4">
         {[...Array(6)].map((_, i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader className="pb-2">
@@ -124,56 +124,79 @@ export function DSAProgressDashboard() {
     .slice(0, 5);
 
   return (
-    <div className="space-y-6 p-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">
-            DSA Practice Progress
-          </h2>
-          <p className="text-muted-foreground">
-            Track your progress on curated Data Structures & Algorithms questions
-          </p>
-        </div>
-        <Button 
-          onClick={() => router.push('/dsa')}
-          className="flex items-center gap-2"
-        >
-          Practice DSA
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-      </div>
+    <div className="space-y-6">
+      {/* Enhanced Header with Theme Integration */}
+      <Card className="relative overflow-hidden border border-border/50 bg-gradient-to-r from-accent/5 via-primary/5 to-secondary/5 backdrop-blur-sm">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/3 to-transparent opacity-50" />
+        <CardHeader className="relative">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="relative">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-accent to-accent/80 rounded-xl flex items-center justify-center shadow-lg ring-1 ring-accent/20">
+                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-accent-foreground" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-primary rounded-full flex items-center justify-center">
+                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-accent rounded-full animate-pulse" />
+                </div>
+              </div>
+              <div>
+                <CardTitle className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                  DSA Practice Progress
+                </CardTitle>
+                <p className="text-sm sm:text-base text-muted-foreground/80">
+                  Track your progress on curated Data Structures & Algorithms questions
+                </p>
+              </div>
+            </div>
+            <Button 
+              onClick={() => router.push('/dsa')}
+              className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/20 transition-all duration-200 text-sm"
+              size="sm"
+            >
+              <span className="hidden xs:inline">Practice DSA</span>
+              <span className="xs:hidden">Practice</span>
+              <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+      </Card>
 
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Enhanced Overview Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         {/* Overall Progress */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Curated Questions</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+        <Card className="group relative overflow-hidden border border-border/50 bg-gradient-to-br from-primary/5 to-accent/5 hover:from-primary/10 hover:to-accent/10 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Curated Questions</CardTitle>
+            <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center shadow-sm ring-1 ring-primary/20">
+              <Target className="h-4 w-4 text-primary-foreground" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-foreground mb-2">
               {stats.overall.solved}/{stats.overall.total}
             </div>
             <Progress 
               value={stats.overall.completionPercentage} 
-              className="mt-2"
+              className="h-2 bg-muted"
             />
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-2">
               {stats.overall.completionPercentage}% completed
             </p>
           </CardContent>
         </Card>
 
         {/* Streak */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
-            <Flame className="h-4 w-4 text-orange-500" />
+        <Card className="group relative overflow-hidden border border-border/50 bg-gradient-to-br from-orange-500/5 to-red-500/5 hover:from-orange-500/10 hover:to-red-500/10 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10 hover:-translate-y-1">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Current Streak</CardTitle>
+            <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center shadow-sm ring-1 ring-orange-500/20">
+              <Flame className="h-4 w-4 text-white" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400 mb-2">
               {stats.streak}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -183,13 +206,16 @@ export function DSAProgressDashboard() {
         </Card>
 
         {/* In Progress */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-            <Clock className="h-4 w-4 text-blue-500" />
+        <Card className="group relative overflow-hidden border border-border/50 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 hover:from-blue-500/10 hover:to-cyan-500/10 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">In Progress</CardTitle>
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-lg flex items-center justify-center shadow-sm ring-1 ring-blue-500/20">
+              <Clock className="h-4 w-4 text-white" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+          <CardContent className="relative">
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-2">
               {stats.overall.inProgress}
             </div>
             <p className="text-xs text-muted-foreground">
