@@ -1,13 +1,16 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import ActiveLink from "@/components/ui/active-link";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useRouteLoading } from "@/hooks/useRouteLoading";
+import { usePathname } from "next/navigation";
 
 interface Props {
   href: string;
@@ -18,6 +21,24 @@ interface Props {
 
 export const SidebarLink = ({ hoverTextKey, href, Icon, include }: Props) => {
   const t = useTranslations("SIDEBAR.MAIN");
+  const { startLoading } = useRouteLoading();
+  const [isLinkLoading, setIsLinkLoading] = useState(false);
+  const pathname = usePathname();
+
+
+  // Reset loading state when route changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLinkLoading(false);
+    }, 100); // Small delay to ensure route change is detected
+    
+    return () => clearTimeout(timer);
+  }, [pathname]);
+
+  const handleClick = (e: React.MouseEvent) => {
+    setIsLinkLoading(true);
+    startLoading();
+  };
 
   return (
     <HoverCard openDelay={250} closeDelay={250}>
@@ -28,8 +49,13 @@ export const SidebarLink = ({ hoverTextKey, href, Icon, include }: Props) => {
             variant={"ghost"}
             size={"icon"}
             href={href}
+            onClick={handleClick}
           >
-            <Icon />
+            {isLinkLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Icon />
+            )}
           </ActiveLink>
         </div>
       </HoverCardTrigger>

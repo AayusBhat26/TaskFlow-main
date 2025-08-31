@@ -49,16 +49,14 @@ interface SolvedQuestionsData {
   };
 }
 
-interface Props {
-  codeforcesUsername: string | null;
-}
+interface Props {}
 
 // Simple loading skeleton component
 const Skeleton = ({ className }: { className?: string }) => (
   <div className={`animate-pulse bg-muted rounded ${className}`} />
 );
 
-export const SolvedQuestionsContainer = ({ codeforcesUsername }: Props) => {
+export const SolvedQuestionsContainer = ({}: Props) => {
   const [data, setData] = useState<SolvedQuestionsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,26 +67,10 @@ export const SolvedQuestionsContainer = ({ codeforcesUsername }: Props) => {
   const questionsPerPage = 50;
 
   const fetchSolvedQuestions = async () => {
-    if (!codeforcesUsername) {
-      setError('No usernames configured');
-      setIsLoading(false);
-      return;
-    }
-
     try {
       setIsRefetching(true);
-      const response = await fetch('/api/solved-questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          codeforcesUsername,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch solved questions');
-      
-      const result = await response.json();
-      setData(result);
+      // For now, set empty data since external services are removed
+      setData({ leetcode: [], codeforces: [] });
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -100,7 +82,7 @@ export const SolvedQuestionsContainer = ({ codeforcesUsername }: Props) => {
 
   useEffect(() => {
     fetchSolvedQuestions();
-  }, [codeforcesUsername]);
+  }, []);
 
   if (isLoading) {
     return <SolvedQuestionsLoading />;
@@ -454,13 +436,8 @@ const NoQuestionsFound = () => (
       <Code className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
       <h3 className="text-lg font-medium mb-2">No solved questions found</h3>
       <p className="text-muted-foreground mb-4">
-        Connect your LeetCode and Codeforces accounts to see your solved questions.
+        No solved questions found in your current data.
       </p>
-      <Link href="/dashboard/settings/external-services">
-        <Button>
-          Configure Accounts
-        </Button>
-      </Link>
     </CardContent>
   </Card>
 );

@@ -55,6 +55,56 @@ export const defaultAchievements = [
     rarity: AchievementRarity.LEGENDARY
   },
 
+  // Note Creation Achievements
+  {
+    name: "First Note",
+    description: "Create your first note",
+    category: AchievementCategory.PRODUCTIVITY,
+    type: AchievementType.MILESTONE,
+    iconName: "FileText",
+    iconColor: "#10B981",
+    requirement: 1,
+    pointsReward: 15,
+    badgeId: "first-note",
+    rarity: AchievementRarity.COMMON
+  },
+  {
+    name: "Note Taker",
+    description: "Create 10 notes",
+    category: AchievementCategory.PRODUCTIVITY,
+    type: AchievementType.CUMULATIVE,
+    iconName: "BookOpen",
+    iconColor: "#F59E0B",
+    requirement: 10,
+    pointsReward: 75,
+    badgeId: "note-taker",
+    rarity: AchievementRarity.UNCOMMON
+  },
+  {
+    name: "Note Master",
+    description: "Create 50 notes",
+    category: AchievementCategory.PRODUCTIVITY,
+    type: AchievementType.CUMULATIVE,
+    iconName: "Library",
+    iconColor: "#8B5CF6",
+    requirement: 50,
+    pointsReward: 250,
+    badgeId: "note-master",
+    rarity: AchievementRarity.RARE
+  },
+  {
+    name: "Note Legend",
+    description: "Create 200 notes",
+    category: AchievementCategory.PRODUCTIVITY,
+    type: AchievementType.CUMULATIVE,
+    iconName: "Archive",
+    iconColor: "#EF4444",
+    requirement: 200,
+    pointsReward: 800,
+    badgeId: "note-legend",
+    rarity: AchievementRarity.EPIC
+  },
+
   // Pomodoro Achievements
   {
     name: "Focus Beginner",

@@ -1,6 +1,5 @@
 import { getAuthSession } from "@/lib/auth";
 import { BreadcrumbNav } from "./BreadcrumbNav";
-import { User } from "./User";
 import Welcoming from "../common/Welcoming";
 import { OpenSidebar } from "./OpenSidebar";
 import { cn } from "@/lib/utils";
@@ -70,13 +69,7 @@ export const DashboardHeader = async ({
           <NotificationContainer userId={session.user.id} />
         </div>
 
-        <User
-          profileImage={session?.user.image}
-          username={session.user.username!}
-          email={session.user.email!}
-          name={session.user.name}
-          surname={session.user.surname}
-        />
+
       </div>
     </header>
   );

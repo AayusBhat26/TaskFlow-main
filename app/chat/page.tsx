@@ -1,8 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { WorkspaceChat } from '@/components/chat/WorkspaceChat';
 
 export default async function ChatPage() {
   const session = await getServerSession(authOptions);
@@ -11,70 +9,52 @@ export default async function ChatPage() {
     redirect('/auth/signin');
   }
 
-  // Fetch user's workspaces
-  const userWithWorkspaces = await db.user.findUnique({
-    where: {
-      id: session.user.id,
-    },
-    include: {
-      subscriptions: {
-        include: {
-          workspace: {
-            include: {
-              _count: {
-                select: {
-                  subscribers: true,
-                },
-              },
-              subscribers: {
-                include: {
-                  user: {
-                    select: {
-                      id: true,
-                      name: true,
-                      username: true,
-                      image: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!userWithWorkspaces) {
-    redirect('/auth/signin');
-  }
-
-  const workspaces = userWithWorkspaces.subscriptions.map((sub: any) => ({
-    ...sub.workspace,
-    subscribers: sub.workspace.subscribers.map((subscriber: any) => ({
-      user: {
-        id: subscriber.user.id,
-        name: subscriber.user.name || subscriber.user.username || 'Unknown',
-        username: subscriber.user.username || subscriber.user.name || 'unknown',
-        image: subscriber.user.image,
-      },
-    })),
-  }));
-  
-  const currentUser = {
-    id: userWithWorkspaces.id,
-    name: userWithWorkspaces.name || userWithWorkspaces.username || 'Unknown User',
-    email: userWithWorkspaces.email || '',
-    image: userWithWorkspaces.image,
-    username: userWithWorkspaces.username || userWithWorkspaces.name || 'unknown',
-  };
-
   return (
-    <main className="h-screen bg-background">
-      <WorkspaceChat 
-        workspaces={workspaces}
-        currentUser={currentUser}
-      />
+    <main className="min-h-screen bg-background flex items-center justify-center">
+      <div className="text-center max-w-md mx-auto px-6">
+        <div className="mb-8">
+          <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg 
+              className="w-12 h-12 text-muted-foreground" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" 
+              />
+            </svg>
+          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-4">Chat Feature</h1>
+          <p className="text-lg text-muted-foreground mb-6">
+            We're currently working hard to bring you an amazing chat experience.
+          </p>
+          <div className="bg-muted/50 rounded-lg p-4 border border-border">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium">Coming Soon:</span> Real-time workspace chat, 
+              file sharing, and team collaboration features.
+            </p>
+          </div>
+        </div>
+        
+        <div className="space-y-3">
+          <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <span>Under Development</span>
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+          </div>
+          
+          <a 
+            href="/dashboard" 
+            className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+          >
+            Back to Dashboard
+          </a>
+        </div>
+      </div>
     </main>
   );
 }

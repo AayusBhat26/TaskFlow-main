@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { DSAUploader } from '@/components/dsa/DSAUploader';
 import { ImportedQuestionsTab } from '@/components/dsa/ImportedQuestionsTab';
+import { HandPickedProgressTracker } from '@/components/dsa/HandPickedProgressTracker';
 import {
   CheckCircle2,
   Circle,
@@ -33,6 +34,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { playQuestionCompletionSound } from '@/lib/soundEffects';
+import { useUserSettings } from '@/hooks/useUserSettings';
 
 interface DSAQuestion {
   id: string;
@@ -89,6 +91,8 @@ const statusColors = {
 
 export default function DSAPracticePage() {
   const router = useRouter();
+  const { userSettings } = useUserSettings();
+  const soundsEnabled = (userSettings as any)?.soundsEnabled ?? true;
   const [questions, setQuestions] = useState<DSAQuestion[]>([]);
   const [stats, setStats] = useState<DSAStats>({ total: 0, completed: 0, inProgress: 0, completionPercentage: 0 });
   const [overallStats, setOverallStats] = useState<DSAStats>({ total: 0, completed: 0, inProgress: 0, completionPercentage: 0 });
@@ -156,6 +160,12 @@ export default function DSAPracticePage() {
     fetchQuestions();
     fetchImportBatches();
     fetchOverallStats();
+  }, []); // Only run on mount
+
+  // Fetch questions when filters change
+  useEffect(() => {
+    console.log('🔍 Filters changed, fetching questions...');
+    fetchQuestions();
   }, [selectedTopic, selectedDifficulty, selectedStatus, searchQuery]);
 
   // Listen for progress updates from ImportedQuestionsTab
@@ -180,18 +190,33 @@ export default function DSAPracticePage() {
       if (selectedDifficulty !== 'all') params.append('difficulty', selectedDifficulty);
       if (selectedStatus !== 'all') params.append('status', selectedStatus);
       if (searchQuery) params.append('search', searchQuery);
+      
+      // Explicitly include imported questions to match the stats
+      params.append('includeImported', 'true');
 
+      console.log('🔍 Fetching questions with params:', params.toString());
+      
       const response = await fetch(`/api/dsa/questions?${params}`);
       const data = await response.json();
 
+      console.log('📊 Questions API response:', data);
+
       if (data.success) {
+        console.log('✅ Setting questions:', data.questions.length, 'questions');
         setQuestions(data.questions);
         setStats(data.stats);
         setTopicProgress(data.topicProgress);
+        
+        // Log debug info if available
+        if (data.debug) {
+          console.log('🔍 Debug info:', data.debug);
+        }
       } else {
+        console.error('❌ API returned error:', data.error);
         throw new Error(data.error);
       }
     } catch (error) {
+      console.error('❌ Error fetching questions:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to fetch questions',
@@ -224,10 +249,40 @@ export default function DSAPracticePage() {
           title: status === 'COMPLETED' ? '🎉 Question Completed!' : 'Success',
           description: data.message
         });
+        
+        // Immediately update the local state to reflect the change
+        setQuestions(prevQuestions => 
+          prevQuestions.map(q => {
+            if (q.id === questionId) {
+              const existingProgress = q.progress?.[0];
+              const updatedProgress = {
+                id: existingProgress?.id || 'temp-id',
+                status: status as any,
+                attempts: status === 'COMPLETED' ? (existingProgress?.attempts || 0) + 1 : (existingProgress?.attempts || 0),
+                timeSpent: existingProgress?.timeSpent || 0,
+                completedAt: status === 'COMPLETED' ? new Date().toISOString() : existingProgress?.completedAt,
+                rating: rating || existingProgress?.rating,
+                notes: notes || existingProgress?.notes
+              };
+              
+              return {
+                ...q,
+                progress: [updatedProgress]
+              };
+            }
+            return q;
+          })
+        );
+        
         // Refresh both filtered questions and overall stats
         console.log('🔄 Refreshing questions and overall stats...');
         await fetchQuestions();
         await fetchOverallStats();
+        
+        // Dispatch event to notify other components (like dashboard and handpicked tracker)
+        console.log('📡 Dispatching dsaProgressUpdated event...');
+        window.dispatchEvent(new CustomEvent('dsaProgressUpdated'));
+        
         console.log('✅ Refresh completed');
       } else {
         throw new Error(data.error);
@@ -243,7 +298,51 @@ export default function DSAPracticePage() {
   };
 
   const getQuestionStatus = (question: DSAQuestion) => {
-    return question.progress?.[0]?.status || 'TODO';
+    const status = question.progress?.[0]?.status || 'TODO';
+    console.log(`🔍 Question ${question.id} status:`, status, 'Progress:', question.progress);
+    return status;
+  };
+
+  // Test function to manually test completion
+  const testCompletion = async (questionId: string) => {
+    console.log('🧪 Testing completion for question:', questionId);
+    try {
+      const response = await fetch('/api/dsa/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          questionId,
+          status: 'COMPLETED',
+          notes: 'Test completion',
+          rating: 5
+        })
+      });
+
+      const data = await response.json();
+      console.log('🧪 Test completion response:', data);
+
+      if (data.success) {
+        toast({
+          title: 'Test Success',
+          description: 'Test completion successful'
+        });
+        await fetchQuestions();
+        await fetchOverallStats();
+      } else {
+        toast({
+          title: 'Test Failed',
+          description: data.error,
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('🧪 Test completion error:', error);
+      toast({
+        title: 'Test Error',
+        description: 'Test completion failed',
+        variant: 'destructive'
+      });
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -258,10 +357,6 @@ export default function DSAPracticePage() {
   };
 
   const uniqueTopics = [...new Set(questions.map(q => q.topic))].sort();
-
-  useEffect(() => {
-    fetchQuestions();
-  }, [selectedTopic, selectedDifficulty, selectedStatus, searchQuery]);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -379,6 +474,7 @@ export default function DSAPracticePage() {
       <Tabs defaultValue="questions" className="space-y-4">
         <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="questions">Curated Questions</TabsTrigger>
+          <TabsTrigger value="handpicked">Aayush's Hand Picked</TabsTrigger>
           <TabsTrigger value="topics">Topics</TabsTrigger>
           <TabsTrigger value="imported">All Imports</TabsTrigger>
           {importBatches.map((batch) => (
@@ -445,6 +541,43 @@ export default function DSAPracticePage() {
             </CardContent>
           </Card>
 
+          {/* Debug Information */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="bg-muted/50 p-3 rounded-lg text-xs">
+                <div className="font-semibold mb-2">Debug Info:</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div>Total Questions: {questions.length}</div>
+                  <div>Selected Topic: {selectedTopic}</div>
+                  <div>Selected Difficulty: {selectedDifficulty}</div>
+                  <div>Selected Status: {selectedStatus}</div>
+                  <div>Search Query: {searchQuery || 'None'}</div>
+                  <div>Loading: {loading ? 'Yes' : 'No'}</div>
+                  <div>Stats Total: {stats.total}</div>
+                  <div>Overall Total: {overallStats.total}</div>
+                </div>
+                <div className="mt-4">
+                  <div className="font-semibold mb-2">Question Status Breakdown:</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div>Completed: {questions.filter(q => getQuestionStatus(q) === 'COMPLETED').length}</div>
+                    <div>In Progress: {questions.filter(q => getQuestionStatus(q) === 'IN_PROGRESS').length}</div>
+                    <div>TODO: {questions.filter(q => getQuestionStatus(q) === 'TODO').length}</div>
+                    <div>With Progress: {questions.filter(q => q.progress && q.progress.length > 0).length}</div>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <div className="font-semibold mb-2">Overall Stats:</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div>Total: {overallStats.total}</div>
+                    <div>Completed: {overallStats.completed}</div>
+                    <div>In Progress: {overallStats.inProgress}</div>
+                    <div>Percentage: {overallStats.completionPercentage}%</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Questions List */}
           <ScrollArea className="h-[600px]">
             <div className="space-y-3">
@@ -462,6 +595,13 @@ export default function DSAPracticePage() {
                 questions.map((question) => {
                   const status = getQuestionStatus(question);
                   const progress = question.progress?.[0];
+                  
+                  console.log(`🔍 Rendering question ${question.id}:`, {
+                    title: question.title,
+                    status,
+                    progress,
+                    progressLength: question.progress?.length
+                  });
                   
                   return (
                     <Card key={question.id} className="hover:shadow-md transition-shadow">
@@ -549,7 +689,7 @@ export default function DSAPracticePage() {
                                             onValueChange={(value) => {
                                               // Play sound for completion
                                               if (value === 'COMPLETED') {
-                                                playQuestionCompletionSound();
+                                                playQuestionCompletionSound(undefined, soundsEnabled);
                                               }
                                               updateProgress(question.id, value, progressNotes, progressRating);
                                             }}
@@ -621,11 +761,12 @@ export default function DSAPracticePage() {
                             <Button
                               onClick={() => {
                                 console.log('🔴 BUTTON CLICKED! Question:', question.id, 'Current status:', status);
+                                console.log('🔍 Question progress:', question.progress);
                                 const newStatus = status === 'COMPLETED' ? 'TODO' : 'COMPLETED';
                                 console.log('🔄 New status will be:', newStatus);
                                 // Play sound for completion
                                 if (newStatus === 'COMPLETED') {
-                                  playQuestionCompletionSound();
+                                  playQuestionCompletionSound(undefined, soundsEnabled);
                                 }
                                 updateProgress(question.id, newStatus);
                               }}
@@ -635,6 +776,7 @@ export default function DSAPracticePage() {
                                   ? "bg-green-500 hover:bg-green-600 text-white" 
                                   : "bg-primary hover:bg-primary/90"
                               )}
+                              disabled={loading}
                             >
                               {status === 'COMPLETED' ? (
                                 <>
@@ -662,6 +804,10 @@ export default function DSAPracticePage() {
               )}
             </div>
           </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="handpicked" className="space-y-4">
+          <HandPickedProgressTracker />
         </TabsContent>
 
         <TabsContent value="topics" className="space-y-4">

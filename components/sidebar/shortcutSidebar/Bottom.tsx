@@ -8,17 +8,39 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { LogOutIcon, Settings2 } from "lucide-react";
+import { LogOutIcon, Settings2, Loader2 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
+import { useRouteLoading } from "@/hooks/useRouteLoading";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 export const Bottom = () => {
   const t = useTranslations("SIDEBAR");
   const lang = useLocale();
+  const { startLoading } = useRouteLoading();
+  const [isSettingsLoading, setIsSettingsLoading] = useState(false);
+  const pathname = usePathname();
+  
+  // Reset loading state when route changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsSettingsLoading(false);
+    }, 100); // Small delay to ensure route change is detected
+    
+    return () => clearTimeout(timer);
+  }, [pathname]);
+  
   const logOutHandler = () => {
+    startLoading();
     signOut({
       callbackUrl: `${window.location.origin}/${lang}`,
     });
+  };
+
+  const handleSettingsClick = () => {
+    setIsSettingsLoading(true);
+    startLoading();
   };
 
   return (
@@ -45,8 +67,13 @@ export const Bottom = () => {
               variant={"ghost"}
               size={"icon"}
               href="/dashboard/settings"
+              onClick={handleSettingsClick}
             >
-              <Settings2 />
+              {isSettingsLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Settings2 />
+              )}
             </ActiveLink>
           </div>
         </HoverCardTrigger>

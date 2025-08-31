@@ -18,12 +18,7 @@ export const Finish = () => {
     workspaceImage, 
     surname, 
     useCase, 
-    name,
-    leetcodeUsername,
-    codeforcesUsername,
-    redditUsername,
-    githubUsername,
-    emailIds
+    name
   } = useOnboardingForm();
   const { toast } = useToast();
   const m = useTranslations("MESSAGES");
@@ -39,11 +34,6 @@ export const Finish = () => {
         useCase,
         workspaceImage,
         workspaceName,
-        leetcodeUsername,
-        codeforcesUsername,
-        redditUsername,
-        githubUsername,
-        emailIds,
       });
       return data;
     },

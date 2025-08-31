@@ -145,6 +145,12 @@ export async function POST(request: NextRequest) {
 
     // Create note with transaction to handle tags and blocks
     const note = await db.$transaction(async (tx) => {
+      // Update user's total notes count
+      await tx.user.update({
+        where: { id: session.user.id },
+        data: { totalNotesCreated: { increment: 1 } }
+      });
+
       const newNote = await tx.note.create({
         data: {
           title: data.title || 'Untitled',
@@ -288,6 +294,15 @@ export async function POST(request: NextRequest) {
         }
       }
     });
+
+    // Check for achievements after note creation
+    try {
+      const { GamingService } = await import('@/services/gamingService');
+      await GamingService.checkAchievements(session.user.id);
+    } catch (error) {
+      console.error('Error checking achievements:', error);
+      // Don't fail the note creation if achievement checking fails
+    }
 
     return NextResponse.json(fullNote, { status: 201 });
   } catch (error) {

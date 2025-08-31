@@ -67,8 +67,29 @@ export function ImportedDSAProgressDashboard() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Initial fetch
   useEffect(() => {
     fetchStats();
+  }, []);
+
+  // Listen for progress updates from other components
+  useEffect(() => {
+    const handleProgressUpdate = () => {
+      fetchStats();
+    };
+
+    window.addEventListener('dsaProgressUpdated', handleProgressUpdate);
+    
+    // Fallback: Poll for updates every 30 seconds as a backup
+    const pollInterval = setInterval(() => {
+      console.log('🔄 ImportedDSAProgressDashboard polling for updates...');
+      fetchStats();
+    }, 30000);
+    
+    return () => {
+      window.removeEventListener('dsaProgressUpdated', handleProgressUpdate);
+      clearInterval(pollInterval);
+    };
   }, []);
 
   const fetchStats = async () => {

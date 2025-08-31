@@ -151,6 +151,9 @@ export class GamingService {
             currentProgress = user.totalTasksCompleted;
           } else if (achievement.name.includes('Pomodoro') || achievement.name.includes('Focus')) {
             currentProgress = user.totalPomodoroCompleted;
+          } else if (achievement.name.includes('Note')) {
+            // Use the totalNotesCreated field from user
+            currentProgress = user.totalNotesCreated || 0;
           }
           break;
         

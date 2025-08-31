@@ -64,11 +64,21 @@ export const EmojiSelector = ({
         className={cn(
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background rounded-lg"
         )}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
       >
         {children}
       </DropdownMenuTrigger>
-      <DropdownMenuContent asChild align={align}>
-        <div className="z-50 emoji-picker">
+      <DropdownMenuContent 
+        asChild 
+        align={align || "center"} 
+        side="bottom"
+        sideOffset={8}
+        className="z-[9999]"
+      >
+        <div className="emoji-picker">
           <Picker
             data={data}
             emojiSize={20}

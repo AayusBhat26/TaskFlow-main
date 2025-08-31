@@ -6,12 +6,7 @@ import { db } from '@/lib/db';
 export default async function SolvedQuestionsPage() {
   const session = await checkIfUserCompletedOnboarding("/dashboard/solved-questions");
 
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      codeforcesUsername: true,
-    },
-  });
+
 
   return (
     <div className="container mx-auto p-6">
@@ -23,9 +18,7 @@ export default async function SolvedQuestionsPage() {
       </div>
       
       <Suspense fallback={<div>Loading solved questions...</div>}>
-        <SolvedQuestionsContainer 
-          codeforcesUsername={user?.codeforcesUsername || null}
-        />
+        <SolvedQuestionsContainer />
       </Suspense>
     </div>
   );

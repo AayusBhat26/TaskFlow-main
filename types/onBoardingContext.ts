@@ -1,3 +1,6 @@
+// Custom UseCase type since Prisma schema only has WORK and STUDY
+export type UseCase = "WORK" | "STUDY" | "PERSONAL_USE";
+
 export enum ActionType {
   CHANGE_SITE = "CHANGE_SITE",
   NAME = "NAME",
@@ -8,9 +11,9 @@ export enum ActionType {
   WORKSPACE_IMAGE = "WORKSPACE_IMAGE",
   LEETCODE_USERNAME = "LEETCODE_USERNAME",
   CODEFORCES_USERNAME = "CODEFORCES_USERNAME",
-  REDDIT_USERNAME = "REDDIT_USERNAME",
+  CODECHEF_USERNAME = "CODECHEF_USERNAME",
   GITHUB_USERNAME = "GITHUB_USERNAME",
-  EMAIL_IDS = "EMAIL_IDS",
+  REDDIT_USERNAME = "REDDIT_USERNAME",
 }
 
 export interface Action {
@@ -19,7 +22,7 @@ export interface Action {
 }
 
 export interface OnboardingFormReducer {
-  currentStep: 1 | 2 | 3 | 4 | 5;
+  currentStep: 1 | 2 | 3 | 4;
   name?: string | null;
   surname?: string | null;
   profileImage?: string | null;
@@ -28,9 +31,9 @@ export interface OnboardingFormReducer {
   workspaceImage?: string | null;
   leetcodeUsername?: string | null;
   codeforcesUsername?: string | null;
-  redditUsername?: string | null;
+  codechefUsername?: string | null;
   githubUsername?: string | null;
-  emailIds?: string[];
+  redditUsername?: string | null;
 }
 
 export interface OnboardingFormContext extends OnboardingFormReducer {

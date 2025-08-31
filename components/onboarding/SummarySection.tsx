@@ -18,7 +18,7 @@ export const SummarySection = () => {
   const t = useTranslations("ONBOARDING_FORM");
   return (
     <section className="hidden lg:w-1/2 bg-primary lg:flex justify-center items-center">
-      {currentStep < 3 && (
+      {currentStep < 5 && (
         <div className="bg-card rounded-2xl w-96 min-h-[10rem] shadow-sm flex flex-col items-center p-4 py-8 gap-5">
           <UserAvatar
             className="w-32 h-32 shadow-sm mt-[-5rem]"
@@ -34,6 +34,7 @@ export const SummarySection = () => {
             <p>
               {useCase === "WORK" && t("SECOND_STEP.WORK")}
               {useCase === "STUDY" && t("SECOND_STEP.STUDY")}
+              {useCase === "PERSONAL_USE" && t("SECOND_STEP.PERSONAL")}
             </p>
           )}
         </div>

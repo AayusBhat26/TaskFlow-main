@@ -1,11 +1,9 @@
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
-import enMessages from "../../messages/en.json";
 
-import teMessages from "../../messages/te.json";
 const locales = ["en", "te"];
 
-export default function LocaleLayout({
+export default async function LocaleLayout({
   children,
   params: { locale },
 }: {
@@ -13,7 +11,12 @@ export default function LocaleLayout({
   params: { locale: string };
 }) {
   if (!locales.includes(locale)) notFound();
-  const messages = locale === "te" ? teMessages : enMessages;
+  
+  // Dynamic import to reduce initial bundle size
+  const messages = locale === "te" 
+    ? (await import("../../messages/te.json")).default
+    : (await import("../../messages/en.json")).default;
+    
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       {children}

@@ -10,10 +10,10 @@ export enum CompletionSoundEffect {
 
 // Paths to completion sound effects
 export const pathsToCompletionSounds = {
-  SUCCESS: "/music/bell.mp3", // Using existing bell sound for success
-  ACHIEVEMENT: "/music/fancy.mp3", // Using existing fancy sound for achievements
-  TASK_COMPLETE: "/music/digital.mp3", // Using existing digital sound for tasks
-  QUESTION_COMPLETE: "/music/bird.mp3", // Using existing bird sound for questions
+  SUCCESS: "/sounds/bell.mp3", // Updated to use sounds directory
+  ACHIEVEMENT: "/sounds/fancy.mp3", // Updated to use sounds directory
+  TASK_COMPLETE: "/sounds/digital.mp3", // Updated to use sounds directory
+  QUESTION_COMPLETE: "/sounds/analog.mp3", // Updated to use sounds directory
 } as const;
 
 // Default volumes for different sound types
@@ -28,11 +28,18 @@ const DEFAULT_VOLUMES = {
  * Play a completion sound effect
  * @param soundType - Type of completion sound to play
  * @param volume - Volume level (0-1), defaults to sound-specific level
+ * @param soundsEnabled - Whether sounds are enabled (defaults to true)
  */
 export function playCompletionSound(
   soundType: CompletionSoundEffect,
-  volume?: number
+  volume?: number,
+  soundsEnabled: boolean = true
 ): void {
+  // Don't play sound if sounds are disabled
+  if (!soundsEnabled) {
+    return;
+  }
+
   try {
     const soundPath = pathsToCompletionSounds[soundType];
     const soundVolume = volume ?? DEFAULT_VOLUMES[soundType];
@@ -58,31 +65,35 @@ export function playCompletionSound(
 /**
  * Play task completion sound
  * @param volume - Optional volume override
+ * @param soundsEnabled - Whether sounds are enabled (defaults to true)
  */
-export function playTaskCompletionSound(volume?: number): void {
-  playCompletionSound(CompletionSoundEffect.TASK_COMPLETE, volume);
+export function playTaskCompletionSound(volume?: number, soundsEnabled: boolean = true): void {
+  playCompletionSound(CompletionSoundEffect.TASK_COMPLETE, volume, soundsEnabled);
 }
 
 /**
  * Play DSA question completion sound
  * @param volume - Optional volume override
+ * @param soundsEnabled - Whether sounds are enabled (defaults to true)
  */
-export function playQuestionCompletionSound(volume?: number): void {
-  playCompletionSound(CompletionSoundEffect.QUESTION_COMPLETE, volume);
+export function playQuestionCompletionSound(volume?: number, soundsEnabled: boolean = true): void {
+  playCompletionSound(CompletionSoundEffect.QUESTION_COMPLETE, volume, soundsEnabled);
 }
 
 /**
  * Play general success sound
  * @param volume - Optional volume override
+ * @param soundsEnabled - Whether sounds are enabled (defaults to true)
  */
-export function playSuccessSound(volume?: number): void {
-  playCompletionSound(CompletionSoundEffect.SUCCESS, volume);
+export function playSuccessSound(volume?: number, soundsEnabled: boolean = true): void {
+  playCompletionSound(CompletionSoundEffect.SUCCESS, volume, soundsEnabled);
 }
 
 /**
  * Play achievement sound
  * @param volume - Optional volume override
+ * @param soundsEnabled - Whether sounds are enabled (defaults to true)
  */
-export function playAchievementSound(volume?: number): void {
-  playCompletionSound(CompletionSoundEffect.ACHIEVEMENT, volume);
+export function playAchievementSound(volume?: number, soundsEnabled: boolean = true): void {
+  playCompletionSound(CompletionSoundEffect.ACHIEVEMENT, volume, soundsEnabled);
 }

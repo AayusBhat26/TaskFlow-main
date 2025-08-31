@@ -53,6 +53,9 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    console.log('🔍 Progress API - Existing progress:', existingProgress);
+    console.log('🔍 Progress API - New status:', status);
+
     let progress;
     
     if (existingProgress) {
@@ -82,6 +85,7 @@ export async function POST(req: NextRequest) {
           }
         }
       });
+      console.log('🔍 Progress API - Updated progress:', progress);
     } else {
       // Create new progress
       progress = await db.dSAProgress.create({
@@ -105,6 +109,7 @@ export async function POST(req: NextRequest) {
           }
         }
       });
+      console.log('🔍 Progress API - Created progress:', progress);
     }
 
     // Award points for completion

@@ -99,155 +99,74 @@ export async function GET(req: NextRequest) {
         orderBy: {
           updatedAt: 'desc'
         },
-        take: 10
+        take: 5 // Limit to 5 recent activities for performance
       })
     ]);
 
-    // Process topic progress
-    const topicStats: Record<string, { solved: number; total: number; inProgress: number }> = {};
-    
-    // First, get all topics with their question counts
-    const allTopics = await db.dSAQuestion.groupBy({
-      by: ['topic'],
-      where: {
-        isImported: false
-      },
-      _count: {
-        topic: true
-      }
-    });
+    // Process the data
+    const total = totalQuestions;
+    const solved = userProgress.find(p => p.status === 'COMPLETED')?._count.status || 0;
+    const inProgress = userProgress.find(p => p.status === 'IN_PROGRESS')?._count.status || 0;
+    const todo = userProgress.find(p => p.status === 'TODO')?._count.status || 0;
+    const completionPercentage = total > 0 ? Math.round((solved / total) * 100) : 0;
 
-    // Initialize topic stats
-    allTopics.forEach(topic => {
-      topicStats[topic.topic] = {
-        total: topic._count.topic,
-        solved: 0,
-        inProgress: 0
-      };
-    });
-
-    // Update with user progress
+    // Group by topic
+    const topics: Record<string, { solved: number; total: number; inProgress: number }> = {};
     topicProgress.forEach(progress => {
       const topic = progress.question.topic;
-      if (topicStats[topic]) {
-        if (progress.status === 'COMPLETED') {
-          topicStats[topic].solved++;
-        } else if (progress.status === 'IN_PROGRESS') {
-          topicStats[topic].inProgress++;
-        }
+      if (!topics[topic]) {
+        topics[topic] = { solved: 0, total: 0, inProgress: 0 };
       }
-    });
-
-    // Process difficulty progress
-    const difficultyStats: Record<string, { solved: number; total: number; inProgress: number }> = {
-      EASY: { solved: 0, total: 0, inProgress: 0 },
-      MEDIUM: { solved: 0, total: 0, inProgress: 0 },
-      HARD: { solved: 0, total: 0, inProgress: 0 }
-    };
-
-    // Get total questions by difficulty
-    const difficultyTotals = await db.dSAQuestion.groupBy({
-      by: ['difficulty'],
-      where: {
-        isImported: false
-      },
-      _count: {
-        difficulty: true
-      }
-    });
-
-    difficultyTotals.forEach(diff => {
-      difficultyStats[diff.difficulty].total = diff._count.difficulty;
-    });
-
-    // Update with user progress by difficulty
-    const userDifficultyProgress = await db.dSAProgress.groupBy({
-      by: ['status'],
-      where: {
-        userId: userId,
-        question: {
-          difficulty: {
-            in: ['EASY', 'MEDIUM', 'HARD']
-          },
-          isImported: false
-        }
-      },
-      _count: {
-        status: true
-      }
-    });
-
-    const userDifficultyDetailed = await db.dSAProgress.findMany({
-      where: {
-        userId: userId,
-        question: {
-          isImported: false
-        }
-      },
-      include: {
-        question: {
-          select: {
-            difficulty: true
-          }
-        }
-      }
-    });
-
-    userDifficultyDetailed.forEach(progress => {
-      const difficulty = progress.question.difficulty;
       if (progress.status === 'COMPLETED') {
-        difficultyStats[difficulty].solved++;
+        topics[topic].solved++;
       } else if (progress.status === 'IN_PROGRESS') {
-        difficultyStats[difficulty].inProgress++;
+        topics[topic].inProgress++;
       }
+      topics[topic].total++;
     });
 
-    // Process overall stats
-    const overallStats = {
-      total: totalQuestions,
-      solved: 0,
-      inProgress: 0,
-      todo: 0
-    };
-
-    userProgress.forEach(progress => {
-      if (progress.status === 'COMPLETED') {
-        overallStats.solved = progress._count.status;
-      } else if (progress.status === 'IN_PROGRESS') {
-        overallStats.inProgress = progress._count.status;
-      } else if (progress.status === 'TODO') {
-        overallStats.todo = progress._count.status;
+    // Group by difficulty
+    const difficulty: Record<string, { solved: number; total: number; inProgress: number }> = {};
+    difficultyProgress.forEach(progress => {
+      const diff = progress.status;
+      if (!difficulty[diff]) {
+        difficulty[diff] = { solved: 0, total: 0, inProgress: 0 };
       }
+      difficulty[diff].total++;
     });
 
-    // Calculate completion percentage
-    const completionPercentage = totalQuestions > 0 
-      ? Math.round((overallStats.solved / totalQuestions) * 100) 
-      : 0;
+    // Process recent activity
+    const recentActivityData = recentActivity.map(activity => ({
+      id: activity.id,
+      questionTitle: activity.question.title,
+      topic: activity.question.topic,
+      difficulty: activity.question.difficulty,
+      status: activity.status,
+      updatedAt: activity.updatedAt.toISOString()
+    }));
 
-    // Get streak information
-    const streak = await calculateStreak(userId);
-
-    return NextResponse.json({
+    const stats = {
       overall: {
-        ...overallStats,
+        total,
+        solved,
+        inProgress,
+        todo,
         completionPercentage
       },
-      topics: topicStats,
-      difficulty: difficultyStats,
-      recentActivity: recentActivity.map(activity => ({
-        id: activity.id,
-        questionTitle: activity.question.title,
-        topic: activity.question.topic,
-        difficulty: activity.question.difficulty,
-        status: activity.status,
-        updatedAt: activity.updatedAt
-      })),
-      streak
-    });
+      topics,
+      difficulty,
+      recentActivity: recentActivityData,
+      streak: 0 // Placeholder for streak calculation
+    };
 
+    // Add caching headers for better performance
+    const response = NextResponse.json(stats, { status: 200 });
+    response.headers.set('Cache-Control', 'private, max-age=300'); // Cache for 5 minutes
+    response.headers.set('Vary', 'Authorization'); // Vary by user
+    
+    return response;
   } catch (error) {
-    console.error('Error fetching DSA statistics:', error);
+    console.error('Error fetching DSA stats:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

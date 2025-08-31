@@ -14,6 +14,7 @@ import { UserHoverInfo } from "@/components/common/UserHoverInfoCard";
 import { Separator } from "@/components/ui/separator";
 import { AssignedToTaskSelector } from "../assignToTask/AssignedToTaskSelector";
 import { TaskCompleteButton } from "../TaskCompleteButton";
+import { ReadOnlyContentRenderer } from "./ReadOnlyContentRenderer";
 
 interface Props {
   task: ExtendedTask;
@@ -77,6 +78,11 @@ export const ReadOnlyContent = ({ task, isSavedByUser, userRole }: Props) => {
                 task.tags.map((tag) => <LinkTag key={tag.id} tag={tag} />)}
             </div>
           </div>
+        </div>
+        
+        {/* Task Content Section */}
+        <div className="w-full">
+          <ReadOnlyContentRenderer content={task.content as JSON} />
         </div>
       </CardContent>
       <CardFooter className="w-full flex items-center justify-center gap-2 text-xs">

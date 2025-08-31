@@ -536,6 +536,19 @@ body {
   height: 400px;
 }
 
+.emoji-picker {
+  position: relative;
+  z-index: 9999;
+  max-width: 100vw;
+  max-height: 100vh;
+  overflow: visible;
+}
+
+/* Ensure emoji picker doesn't get cut off */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+
 .ProseMirror p.is-editor-empty:first:child::before {
   content: attr(data-placeholder);
   float: left;

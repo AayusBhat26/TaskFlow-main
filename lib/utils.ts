@@ -22,47 +22,56 @@ export const topSidebarLinks = [
     href: "/dashboard",
     Icon: Home,
     hoverTextKey: "HOME_HOVER",
+    prefetch: true,
   },
   {
     href: "/dashboard/notes",
     Icon: FileText,
     hoverTextKey: "NOTES_HOVER",
+    prefetch: true,
   },
   {
     href: "/dashboard/pomodoro",
     include: "/dashboard/pomodoro",
     Icon: Clock,
     hoverTextKey: "POMODORO_HOVER",
+    prefetch: true,
   },
   {
     href: "/dashboard/calendar",
     Icon: CalendarDays,
     hoverTextKey: "CALENDAR_HOVER",
+    prefetch: true,
   },
   {
     href: "/dashboard/starred",
     Icon: Star,
     hoverTextKey: "STARRED_HOVER",
+    prefetch: true,
   },
   {
     href: "/dashboard/chat",
     Icon: MessageSquare,
     hoverTextKey: "CHAT_HOVER",
+    prefetch: true,
   },
   {
     href: "/dsa",
     Icon: Target,
     hoverTextKey: "DSA_HOVER",
+    prefetch: true,
   },
   {
     href: "/gaming",
     Icon: Trophy,
     hoverTextKey: "GAMING_HOVER",
+    prefetch: true,
   },
   {
     href: "/dashboard/assigned-to-me",
     Icon: User,
     hoverTextKey: "ASSIGNED_TO_ME_HOVER",
+    prefetch: true,
   },
 ];
 

@@ -24,8 +24,10 @@ export async function GET(req: NextRequest) {
     // Build where clause for questions
     const whereClause: any = {};
     
-    // By default, exclude imported questions to show only curated/original questions
-    if (!includeImported) {
+    // By default, include BOTH curated and imported questions to match the stats
+    // This ensures the questions list matches the displayed total count
+    if (includeImported === false) {
+      // Only if explicitly set to false, exclude imported questions
       whereClause.isImported = false;
     }
     
@@ -72,6 +74,10 @@ export async function GET(req: NextRequest) {
         { title: 'asc' }
       ]
     });
+
+    console.log('🔍 Questions API - Found questions:', questions.length);
+    console.log('🔍 Questions API - Questions with progress:', questions.filter(q => q.progress.length > 0).length);
+    console.log('🔍 Questions API - Completed questions:', questions.filter(q => q.progress.length > 0 && q.progress[0].status === 'COMPLETED').length);
 
     // Filter by status if requested
     let filteredQuestions = questions;
@@ -151,6 +157,15 @@ export async function GET(req: NextRequest) {
       })
     );
 
+    // Add debugging information
+    console.log('🔍 Questions API Debug Info:', {
+      totalQuestionsFound: questions.length,
+      filteredQuestionsCount: filteredQuestions.length,
+      whereClause,
+      includeImported,
+      searchParams: Object.fromEntries(searchParams.entries())
+    });
+
     return NextResponse.json({
       success: true,
       questions: filteredQuestions,
@@ -168,7 +183,13 @@ export async function GET(req: NextRequest) {
           completionPercentage: totalQuestions > 0 ? Math.round((completedQuestions / totalQuestions) * 100) : 0
         }
       },
-      topicProgress
+      topicProgress,
+      debug: {
+        totalQuestionsFound: questions.length,
+        filteredQuestionsCount: filteredQuestions.length,
+        whereClause,
+        includeImported
+      }
     });
 
   } catch (error) {

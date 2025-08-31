@@ -14,6 +14,9 @@ const nextConfig = {
     ],
     swcMinify: true,
     workerThreads: false,
+    // Add route prefetching for better performance
+    optimizeCss: true,
+    scrollRestoration: true,
   },
 
   // ✅ ignore every TS error
@@ -24,6 +27,35 @@ const nextConfig = {
   // ✅ ignore every ESLint error
   eslint: {
     ignoreDuringBuilds: true,
+  },
+
+  // Add performance optimizations
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  // Optimize bundle splitting
+  webpack: (config, { dev, isServer }) => {
+    if (!dev && !isServer) {
+      // Optimize bundle splitting for production
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+          common: {
+            name: 'common',
+            minChunks: 2,
+            chunks: 'all',
+            enforce: true,
+          },
+        },
+      };
+    }
+    return config;
   },
 
   images: {

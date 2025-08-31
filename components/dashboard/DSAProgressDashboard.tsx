@@ -11,7 +11,6 @@ import {
   Clock, 
   TrendingUp, 
   BookOpen, 
-  Star,
   ArrowRight,
   Flame
 } from "lucide-react";
@@ -35,14 +34,7 @@ interface DSAStats {
     total: number;
     inProgress: number;
   }>;
-  recentActivity: Array<{
-    id: string;
-    questionTitle: string;
-    topic: string;
-    difficulty: string;
-    status: string;
-    updatedAt: string;
-  }>;
+
   streak: number;
 }
 
@@ -51,8 +43,32 @@ export function DSAProgressDashboard() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Initial fetch
   useEffect(() => {
     fetchStats();
+  }, []);
+
+  // Listen for progress updates from other components
+  useEffect(() => {
+    const handleProgressUpdate = () => {
+      console.log('📡 DSAProgressDashboard received dsaProgressUpdated event, refreshing stats...');
+      fetchStats();
+    };
+
+    console.log('🔌 DSAProgressDashboard setting up event listener for dsaProgressUpdated');
+    window.addEventListener('dsaProgressUpdated', handleProgressUpdate);
+    
+    // Fallback: Poll for updates every 30 seconds as a backup
+    const pollInterval = setInterval(() => {
+      console.log('🔄 DSAProgressDashboard polling for updates...');
+      fetchStats();
+    }, 30000);
+    
+    return () => {
+      console.log('🔌 DSAProgressDashboard removing event listener for dsaProgressUpdated');
+      window.removeEventListener('dsaProgressUpdated', handleProgressUpdate);
+      clearInterval(pollInterval);
+    };
   }, []);
 
   const fetchStats = async () => {
@@ -148,15 +164,24 @@ export function DSAProgressDashboard() {
                 </p>
               </div>
             </div>
-            <Button 
-              onClick={() => router.push('/dsa')}
-              className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/20 transition-all duration-200 text-sm"
-              size="sm"
-            >
-              <span className="hidden xs:inline">Practice DSA</span>
-              <span className="xs:hidden">Practice</span>
-              <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={fetchStats}
+                className="flex items-center gap-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-lg hover:shadow-secondary/20 transition-all duration-200 text-sm"
+                size="sm"
+              >
+                Refresh
+              </Button>
+              <Button 
+                onClick={() => router.push('/dsa')}
+                className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/20 transition-all duration-200 text-sm"
+                size="sm"
+              >
+                <span className="hidden xs:inline">Practice DSA</span>
+                <span className="xs:hidden">Practice</span>
+                <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
+              </Button>
+            </div>
           </div>
         </CardHeader>
       </Card>
@@ -297,50 +322,7 @@ export function DSAProgressDashboard() {
         </Card>
       </div>
 
-      {/* Recent Activity */}
-      {stats.recentActivity.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Star className="h-5 w-5" />
-              Recent Activity (Curated Questions)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {stats.recentActivity.slice(0, 5).map((activity) => (
-                <div 
-                  key={activity.id}
-                  className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                >
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">
-                      {activity.questionTitle}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {activity.topic}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getDifficultyColor(activity.difficulty)}>
-                      {activity.difficulty}
-                    </Badge>
-                    <Badge className={getStatusColor(activity.status)}>
-                      {activity.status.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 p-3 bg-accent rounded-lg">
-              <p className="text-sm text-accent-foreground">
-                <strong>Note:</strong> Progress shown is for curated questions only. 
-                Your imported questions are tracked separately in the DSA practice section.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
     </div>
   );
 }

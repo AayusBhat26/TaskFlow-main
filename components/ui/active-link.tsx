@@ -1,7 +1,7 @@
 "use client";
-import React, { useRef } from "react";
+import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "./button";
 
@@ -21,6 +21,9 @@ interface Props {
   include?: string;
   workspaceIcon?: boolean;
   disableActiveStateColor?: boolean;
+  // New prop to handle special cases where Link can't be used
+  forceDiv?: boolean;
+  onClick?: (e: React.MouseEvent) => void;
 }
 
 const ActiveLink = React.forwardRef<HTMLAnchorElement, Props>(
@@ -34,50 +37,66 @@ const ActiveLink = React.forwardRef<HTMLAnchorElement, Props>(
       include,
       workspaceIcon,
       disableActiveStateColor = false,
+      forceDiv = false,
+      onClick,
       ...props
     }: Props,
     ref
   ) => {
     const pathname = usePathname();
+    const router = useRouter();
 
-    // Check if this ActiveLink is inside a HoverCardTrigger or other wrapper that might create nested anchors
-    const isInWrapper = useRef(false);
+    // Determine if this link is active
+    const isActive = href === pathname || (include && pathname.includes(include));
 
-    // Check if children contains any anchor elements
-    const containsAnchor = React.Children.toArray(children).some(child => {
-      if (React.isValidElement(child)) {
-        return child.type === 'a' || child.type === Link;
-      }
-      return false;
-    });
-
+    // Calculate the link class
     const linkClass = cn(
-      `${buttonVariants({ variant, size })} ${
-        href === pathname || (include && pathname.includes(include))
-          ? workspaceIcon
-            ? "font-semibold border-secondary-foreground border-2"
-            : disableActiveStateColor
-            ? ""
-            : "bg-secondary font-semibold"
-          : ""
-      }`,
+      buttonVariants({ variant, size }),
+      {
+        // Active state styling
+        "font-semibold border-secondary-foreground border-2": isActive && workspaceIcon,
+        "bg-secondary font-semibold": isActive && !workspaceIcon && !disableActiveStateColor,
+      },
       className
     );
 
-    // If wrapped in HoverCardTrigger or contains anchor, render as div to avoid nesting
-    if (containsAnchor) {
+    // Handle navigation for div elements
+    const handleClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      router.push(href);
+    };
+
+    // Only render as div if explicitly forced (for special cases like HoverCardTrigger)
+    if (forceDiv) {
       return (
-        <div className={linkClass} {...(props as any)} ref={ref as any}>
+        <div 
+          className={cn(linkClass, "cursor-pointer")}
+          onClick={handleClick}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              router.push(href);
+            }
+          }}
+          aria-label={`Navigate to ${href}`}
+          ref={ref as any}
+          {...(props as any)}
+        >
           {children}
         </div>
       );
     }
 
+    // Default: Always use Next.js Link for optimal performance
     return (
       <Link
         href={href}
         className={linkClass}
+        prefetch={true} // Explicitly enable prefetching
         ref={ref}
+        onClick={onClick}
         {...props}
       >
         {children}

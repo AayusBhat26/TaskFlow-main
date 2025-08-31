@@ -20,7 +20,7 @@ import { ActionType } from "@/types/onBoardingContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/ui/loadingState";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 
 export const ThirdStep = () => {
   const [uploadError, setUploadError] = useState(false);
@@ -65,6 +65,7 @@ export const ThirdStep = () => {
     if (uploadError) return;
 
     dispatch({ type: ActionType.WORKSPACE_NAME, payload: data.workspaceName });
+    // Move to step 4
     dispatch({ type: ActionType.CHANGE_SITE, payload: currentStep + 1 });
   };
 
@@ -110,20 +111,31 @@ export const ThirdStep = () => {
             LabelClassName="text-muted-foreground mb-1.5 self-start"
             LabelText={t("THIRD_STEP.INPUTS.FILE")}
           />
-          <Button
-            disabled={isUploading}
-            type="submit"
-            className="w-full mt-10 max-w-md dark:text-white font-semibold"
-          >
-            {isUploading ? (
-              <LoadingState />
-            ) : (
-              <>
-                {t("NEXT_BTN")}
-                <ArrowRight className="ml-2" width={18} height={18} />
-              </>
-            )}
-          </Button>
+          <div className="flex gap-4 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => dispatch({ type: ActionType.CHANGE_SITE, payload: currentStep - 1 })}
+              className="flex-1"
+            >
+              <ArrowLeft className="mr-2" width={18} height={18} />
+              Back
+            </Button>
+            <Button
+              disabled={isUploading}
+              type="submit"
+              className="flex-1 mt-10 max-w-md dark:text-white font-semibold"
+            >
+              {isUploading ? (
+                <LoadingState />
+              ) : (
+                <>
+                  {t("NEXT_BTN")}
+                  <ArrowRight className="ml-2" width={18} height={18} />
+                </>
+              )}
+            </Button>
+          </div>
         </form>
       </Form>
     </>

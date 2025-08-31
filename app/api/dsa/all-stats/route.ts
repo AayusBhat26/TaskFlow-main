@@ -243,6 +243,10 @@ export async function GET(req: NextRequest) {
     };
 
     console.log('📊 Processing user progress:', userProgress);
+    console.log('📊 Total questions:', totalQuestions);
+    console.log('📊 Total curated:', totalCurated);
+    console.log('📊 Total imported:', totalImported);
+    
     userProgress.forEach(progress => {
       console.log('🔍 Progress item:', progress);
       if (progress.status === 'COMPLETED') {

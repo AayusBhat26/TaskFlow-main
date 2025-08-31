@@ -2,12 +2,12 @@
 
 import { createContext, useContext, useReducer, ReactNode, Reducer } from "react";
 import { Session } from "next-auth";
-import { UseCase } from "@prisma/client";
 import {
   Action,
   ActionType,
   OnboardingFormContext,
   OnboardingFormReducer,
+  UseCase,
 } from "@/types/onBoardingContext";
 
 // Create context with a default placeholder
@@ -21,6 +21,8 @@ const onboardingFormReducer: Reducer<OnboardingFormReducer, Action> = (
   action
 ) => {
   const { type, payload } = action;
+  console.log("Context reducer:", { type, payload, currentState: state });
+  
   switch (type) {
     case ActionType.CHANGE_SITE:
       return { ...state, currentStep: payload as OnboardingFormReducer["currentStep"] };
@@ -29,6 +31,7 @@ const onboardingFormReducer: Reducer<OnboardingFormReducer, Action> = (
     case ActionType.SURNAME:
       return { ...state, surname: payload as string };
     case ActionType.USECASE:
+      console.log("Setting useCase to:", payload);
       return { ...state, useCase: payload as UseCase };
     case ActionType.PROFILEIMAGE:
       return { ...state, profileImage: payload as string | null };
@@ -40,12 +43,13 @@ const onboardingFormReducer: Reducer<OnboardingFormReducer, Action> = (
       return { ...state, leetcodeUsername: payload as string | null };
     case ActionType.CODEFORCES_USERNAME:
       return { ...state, codeforcesUsername: payload as string | null };
-    case ActionType.REDDIT_USERNAME:
-      return { ...state, redditUsername: payload as string | null };
+    case ActionType.CODECHEF_USERNAME:
+      return { ...state, codechefUsername: payload as string | null };
     case ActionType.GITHUB_USERNAME:
       return { ...state, githubUsername: payload as string | null };
-    case ActionType.EMAIL_IDS:
-      return { ...state, emailIds: payload as string[] };
+    case ActionType.REDDIT_USERNAME:
+      return { ...state, redditUsername: payload as string | null };
+
     default:
       return state;
   }
@@ -67,9 +71,9 @@ const initialFormState: OnboardingFormReducer = {
   workspaceImage: null,
   leetcodeUsername: null,
   codeforcesUsername: null,
-  redditUsername: null,
+  codechefUsername: null,
   githubUsername: null,
-  emailIds: [],
+  redditUsername: null,
 };
 
 export const OnboardingFormProvider = ({

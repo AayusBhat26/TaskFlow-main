@@ -31,15 +31,18 @@ const RADIO_OPTIONS = [
 export const AssignedToMeFilter = ({ userWorkspaces }: Props) => {
   const { currentType, workspaceFilterParam } = useGetAssignedToMeParams();
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleRadioChange = (value: "all" | "tasks" | "mind-maps") => {
+  const handleRadioChange = async (value: "all" | "tasks" | "mind-maps") => {
+    setIsLoading(true);
     let link = "/dashboard/assigned-to-me";
 
     workspaceFilterParam
       ? (link = `/dashboard/assigned-to-me?workspace=${workspaceFilterParam}&type=${value}`)
       : (link = `/dashboard/assigned-to-me?workspace=all&type=${value}`);
 
-    router.replace(link);
+    await router.replace(link);
+    setIsLoading(false);
   };
   return (
     <div className="flex flex-col gap-6 w-full">

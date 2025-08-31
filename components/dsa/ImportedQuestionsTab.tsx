@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { playQuestionCompletionSound } from '@/lib/soundEffects';
+import { useUserSettings } from '@/hooks/useUserSettings';
 
 interface ImportedQuestion {
   id: string;
@@ -79,6 +80,7 @@ interface ImportedQuestionsTabProps {
 }
 
 export function ImportedQuestionsTab({ batchId }: ImportedQuestionsTabProps = {}) {
+  const { userSettings: soundSettings } = useUserSettings();
   const [data, setData] = useState<ImportedQuestionsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedBatch, setSelectedBatch] = useState(batchId || 'all');
@@ -443,7 +445,7 @@ export function ImportedQuestionsTab({ batchId }: ImportedQuestionsTabProps = {}
                             console.log('🔄 New status will be:', newStatus);
                             // Play sound for completion
                             if (newStatus === 'COMPLETED') {
-                              playQuestionCompletionSound();
+                                                             playQuestionCompletionSound(undefined, soundSettings?.soundsEnabled ?? true);
                             }
                             updateProgress(question.id, newStatus);
                           }}

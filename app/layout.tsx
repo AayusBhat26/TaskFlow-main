@@ -5,7 +5,8 @@ import { ToastProvider } from "@/context/ToastContext";
 import { QueryProvider } from "@/providers/QueryProvider";
 import ClientSessionProvider from "@/components/ClientSessionProvider";
 import { SocketProvider } from "@/context/SocketProvider";
-import { ExternalServicesProvider } from "@/context/ExternalServicesProvider";
+import { GlobalRouteLoading } from "@/components/common/GlobalRouteLoading";
+
 
 export const metadata: Metadata = {
   title: "TaskFlow - Fast Task Management",
@@ -24,11 +25,10 @@ export default function RootLayout({
           <ThemeProvider>
             <QueryProvider>
               <SocketProvider>
-                <ExternalServicesProvider>
-                  <ToastProvider>
-                    {children}
-                  </ToastProvider>
-                </ExternalServicesProvider>
+                <ToastProvider>
+                  <GlobalRouteLoading />
+                  {children}
+                </ToastProvider>
               </SocketProvider>
             </QueryProvider>
           </ThemeProvider>

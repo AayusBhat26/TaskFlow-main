@@ -141,7 +141,13 @@ export const TaskContainer = ({
 
   return (
     <Card>
-      <form id="task-form">
+      <form 
+        id="task-form" 
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+      >
         <CardContent className="py-4 sm:py-6 flex flex-col gap-10">
           <div className="w-full flex flex-col sm:flex-row items-start gap-2 sm:gap-4">
             <Emoji

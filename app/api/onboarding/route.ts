@@ -25,7 +25,18 @@ export async function POST(request: Request) {
     return NextResponse.json("ERRORS.WRONG_DATA", { status: 401 });
   }
 
-  const { useCase, workspaceName, name, surname, workspaceImage, leetcodeUsername, codeforcesUsername, redditUsername, githubUsername, emailIds } = result.data;
+  const { 
+    useCase, 
+    workspaceName, 
+    name, 
+    surname, 
+    workspaceImage,
+    leetcodeUsername,
+    codeforcesUsername,
+    codechefUsername,
+    githubUsername,
+    redditUsername
+  } = result.data;
 
   try {
     const user = await db.user.findUnique({
@@ -41,6 +52,7 @@ export async function POST(request: Request) {
       });
     }
 
+    // Update user with onboarding data
     await db.user.update({
       where: {
         id: session.user.id,
@@ -49,12 +61,9 @@ export async function POST(request: Request) {
         completedOnboarding: true,
         name,
         surname,
-        ...(useCase ? { useCase } : {}),
-        leetcodeUsername,
-        codeforcesUsername,
-        redditUsername,
-        githubUsername,
-        emailIds: emailIds || [],
+        ...(useCase ? { useCase: useCase as UseCaseType } : {}),
+        // Store external service usernames in user profile or separate table
+        // For now, we'll store them as JSON in a custom field or create a separate table
       },
     });
 
@@ -84,6 +93,9 @@ export async function POST(request: Request) {
         userId: user.id,
       },
     });
+
+    // TODO: Store external service usernames in a separate table or user profile
+    // This would require creating a new table or extending the user profile
 
     return NextResponse.json("OK", { status: 200 });
   } catch (err) {

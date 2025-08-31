@@ -20,6 +20,7 @@ import { useState } from "react";
 import { AddWorkspaceForm } from "./AddWorkspaceForm";
 import Warning from "@/components/ui/warning";
 import { CreatedWorkspacesInfo } from "@/components/common/CreatedWorkspacesInfo";
+import { useRouteLoading } from "@/hooks/useRouteLoading";
 
 interface Props {
   createdWorkspaces: number;
@@ -29,6 +30,13 @@ interface Props {
 export const AddWorkspace = ({ createdWorkspaces, refetchWorkspaces }: Props) => {
   const [open, setOpen] = useState(false);
   const t = useTranslations("SIDEBAR");
+  const { startLoading } = useRouteLoading();
+  
+  const handleOpenDialog = () => {
+    startLoading();
+    setOpen(true);
+  };
+
   return (
     <div>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -36,7 +44,7 @@ export const AddWorkspace = ({ createdWorkspaces, refetchWorkspaces }: Props) =>
           <DialogTrigger asChild>
             <HoverCardTrigger>
               <Button
-                onClick={() => setOpen(true)}
+                onClick={handleOpenDialog}
                 variant={"ghost"}
                 size={"icon"}
               >

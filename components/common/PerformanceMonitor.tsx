@@ -1,72 +1,45 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 
-export function PerformanceMonitor() {
+export const PerformanceMonitor = () => {
+  const pathname = usePathname();
+  const navigationStartTime = useRef<number>(0);
+  const isFirstLoad = useRef(true);
+
   useEffect(() => {
-    // Only run in production
-    if (process.env.NODE_ENV !== 'production') return;
-
-    // Web Vitals monitoring
-    if (typeof window !== 'undefined') {
-      // Largest Contentful Paint
-      const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          if (entry.entryType === 'largest-contentful-paint') {
-            console.log('LCP:', entry.startTime);
-          }
-        }
-      });
-      
-      try {
-        observer.observe({ entryTypes: ['largest-contentful-paint'] });
-      } catch (e) {
-        // Browser doesn't support this API
-      }
-
-      // First Input Delay
-      const fidObserver = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          if (entry.entryType === 'first-input') {
-            const fidEntry = entry as any;
-            console.log('FID:', fidEntry.processingStart - fidEntry.startTime);
-          }
-        }
-      });
-      
-      try {
-        fidObserver.observe({ entryTypes: ['first-input'] });
-      } catch (e) {
-        // Browser doesn't support this API
-      }
-
-      // Cumulative Layout Shift
-      const clsObserver = new PerformanceObserver((list) => {
-        let clsValue = 0;
-        for (const entry of list.getEntries()) {
-          const layoutEntry = entry as any;
-          if (!layoutEntry.hadRecentInput) {
-            clsValue += layoutEntry.value;
-          }
-        }
-        if (clsValue > 0) {
-          console.log('CLS:', clsValue);
-        }
-      });
-      
-      try {
-        clsObserver.observe({ entryTypes: ['layout-shift'] });
-      } catch (e) {
-        // Browser doesn't support this API
-      }
-
-      return () => {
-        observer.disconnect();
-        fidObserver.disconnect();
-        clsObserver.disconnect();
-      };
+    if (isFirstLoad.current) {
+      // First page load
+      isFirstLoad.current = false;
+      return;
     }
+
+    // Navigation performance tracking
+    const navigationEndTime = performance.now();
+    const navigationDuration = navigationEndTime - navigationStartTime.current;
+
+    // Log performance metrics
+    if (navigationDuration > 1000) {
+      console.warn(`Slow navigation detected: ${navigationDuration.toFixed(2)}ms to ${pathname}`);
+    } else {
+      console.log(`Navigation completed: ${navigationDuration.toFixed(2)}ms to ${pathname}`);
+    }
+
+    // Send to analytics if needed
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'navigation_performance', {
+        navigation_time: Math.round(navigationDuration),
+        destination: pathname,
+        is_slow: navigationDuration > 1000
+      });
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    // Set navigation start time when component mounts
+    navigationStartTime.current = performance.now();
   }, []);
 
-  return null;
-}
+  return null; // This component doesn't render anything
+};

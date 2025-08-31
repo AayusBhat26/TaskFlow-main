@@ -1,53 +1,5 @@
-import { Suspense } from 'react';
 import { getAuthSession } from '@/lib/auth';
-import { db } from '@/lib/db';
 import { redirect } from 'next/navigation';
-import { notFound } from 'next/navigation';
-import { WorkspaceChat } from '@/components/chat/WorkspaceChat';
-
-async function getUserWorkspaces(userId: string) {
-  try {
-    const workspaces = await db.workspace.findMany({
-      where: {
-        OR: [
-          { creatorId: userId },
-          { 
-            subscribers: {
-              some: { userId }
-            }
-          }
-        ]
-      },
-      include: {
-        _count: {
-          select: {
-            subscribers: true
-          }
-        },
-        subscribers: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                username: true,
-                image: true,
-              }
-            }
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
-
-    return workspaces;
-  } catch (error) {
-    console.error('Error fetching user workspaces:', error);
-    return [];
-  }
-}
 
 export default async function ChatPage() {
   const session = await getAuthSession();
@@ -56,54 +8,52 @@ export default async function ChatPage() {
     redirect('/auth/signin');
   }
 
-  const workspaces = await getUserWorkspaces(session.user.id);
-
-  if (workspaces.length === 0) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">No Workspaces Found</h1>
-          <p className="text-muted-foreground mb-4">You need to be part of a workspace to use chat.</p>
-          <Link href="/dashboard" className="text-blue-600 hover:text-blue-800 underline">
-            Go to Dashboard
-          </Link>
+  return (
+    <div className="flex-1 flex items-center justify-center bg-background">
+      <div className="text-center max-w-md mx-auto px-6">
+        <div className="mb-8">
+          <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg 
+              className="w-12 h-12 text-muted-foreground" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" 
+              />
+            </svg>
+          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-4">Workspace Chat</h1>
+          <p className="text-lg text-muted-foreground mb-6">
+            Team collaboration through chat is coming soon!
+          </p>
+          <div className="bg-muted/50 rounded-lg p-4 border border-border">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium">Planned Features:</span> Real-time messaging, 
+              workspace channels, file sharing, and team notifications.
+            </p>
+          </div>
+        </div>
+        
+        <div className="space-y-3">
+          <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <span>Under Development</span>
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+          </div>
+          
+          <a 
+            href="/dashboard" 
+            className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+          >
+            Back to Dashboard
+          </a>
         </div>
       </div>
-    );
-  }
-
-  const currentUser = {
-    id: session.user.id,
-    name: session.user.name || session.user.username || 'Unknown User',
-    email: session.user.email || '',
-    image: session.user.image,
-    username: session.user.username || session.user.name || 'unknown',
-  };
-
-  const transformedWorkspaces = workspaces.map((workspace: any) => ({
-    ...workspace,
-    subscribers: workspace.subscribers.map((sub: any) => ({
-      user: {
-        id: sub.user.id,
-        name: sub.user.name || sub.user.username || 'Unknown',
-        username: sub.user.username || sub.user.name || 'unknown',
-        image: sub.user.image,
-      },
-    })),
-  }));
-
-  return (
-    <div className="flex h-full max-h-screen overflow-hidden bg-background">
-      <Suspense fallback={
-        <div className="flex-1 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-        </div>
-      }>
-        <WorkspaceChat 
-          workspaces={transformedWorkspaces} 
-          currentUser={currentUser}
-        />
-      </Suspense>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useOnboardingForm } from "@/context/OnboardingForm";
 
-const steps = [1, 2, 3, 4, 5];
+const steps = [1, 2, 3, 4];
 
 export const FormStepsInfo = () => {
   const { currentStep } = useOnboardingForm();

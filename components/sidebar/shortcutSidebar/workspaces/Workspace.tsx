@@ -8,7 +8,10 @@ import {
 } from "@/components/ui/hover-card";
 import { Workspace, CustomColors } from "@prisma/client";
 import Image from "next/image";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useRouteLoading } from "@/hooks/useRouteLoading";
+import { usePathname } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 interface Props {
   workspace: Workspace;
@@ -19,6 +22,19 @@ export const WorkspaceComponent = ({
   workspace: { id, image, name, color },
   href,
 }: Props) => {
+  const { startLoading } = useRouteLoading();
+  const [isLoading, setIsLoading] = useState(false);
+  const pathname = usePathname();
+  
+  // Reset loading state when route changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 100); // Small delay to ensure route change is detected
+    
+    return () => clearTimeout(timer);
+  }, [pathname]);
+  
   const workspaceColor = useMemo(() => {
     switch (color) {
       case CustomColors.BLUE:
@@ -49,6 +65,12 @@ export const WorkspaceComponent = ({
         return "bg-blue-600 hover:bg-blue-500";
     }
   }, [color]);
+
+  const handleWorkspaceClick = () => {
+    setIsLoading(true);
+    startLoading();
+  };
+
   return (
     <HoverCard openDelay={250} closeDelay={250}>
       <HoverCardTrigger asChild>
@@ -59,8 +81,11 @@ export const WorkspaceComponent = ({
           variant={image ? "ghost" : "default"}
           href={`${href}/${id}`}
           size={"icon"}
+          onClick={handleWorkspaceClick}
         >
-          {image ? (
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin text-white" />
+          ) : image ? (
             <Image
               priority
               className="w-full h-full object-cover rounded-md"
