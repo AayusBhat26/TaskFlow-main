@@ -22,7 +22,6 @@ model User {
   isOnline                 Boolean              @default(false)
   lastSeen                 DateTime?
   points                   Int                  @default(0)
-
   currentStreak            Int                  @default(0)
   currentTitle             String?
   experience               Int                  @default(0)
@@ -58,7 +57,6 @@ model User {
   pointTransactions        PointTransaction[]
   pomodoroSessions         PomodoroSession[]
   pomodoroSettings         PomodoroSettings[]
-  userSettings             UserSettings?
   sessions                 Session?
   subscriptions            Subscription[]
   createdTasks             Task[]               @relation("TaskCreatedByUser")
@@ -68,6 +66,7 @@ model User {
   timeBlocks               TimeBlock[]
   userAchievements         UserAchievement[]
   userChallenges           UserChallenge[]
+  userSettings             UserSettings?
   userStreaks              UserStreak[]
   submissionData           UserSubmissionData[]
   createdWorkspaces        Workspace[]          @relation("CreatedBy")
@@ -284,15 +283,15 @@ model PomodoroSettings {
 }
 
 model UserSettings {
-  id                    String                @id @default(cuid())
-  userId                String                @unique
-  taskCompletionSound   CompletionSoundEffect @default(TASK_COMPLETE)
+  id                      String                @id @default(cuid())
+  userId                  String                @unique
+  taskCompletionSound     CompletionSoundEffect @default(TASK_COMPLETE)
   questionCompletionSound CompletionSoundEffect @default(QUESTION_COMPLETE)
-  soundVolume           Float                 @default(0.6)
-  soundsEnabled         Boolean               @default(true)
-  createdAt             DateTime              @default(now())
-  updatedAt             DateTime              @updatedAt
-  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  soundVolume             Float                 @default(0.6)
+  soundsEnabled           Boolean               @default(true)
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  user                    User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model assignedToTask {

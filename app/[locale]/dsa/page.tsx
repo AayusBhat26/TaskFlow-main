@@ -541,42 +541,7 @@ export default function DSAPracticePage() {
             </CardContent>
           </Card>
 
-          {/* Debug Information */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="bg-muted/50 p-3 rounded-lg text-xs">
-                <div className="font-semibold mb-2">Debug Info:</div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  <div>Total Questions: {questions.length}</div>
-                  <div>Selected Topic: {selectedTopic}</div>
-                  <div>Selected Difficulty: {selectedDifficulty}</div>
-                  <div>Selected Status: {selectedStatus}</div>
-                  <div>Search Query: {searchQuery || 'None'}</div>
-                  <div>Loading: {loading ? 'Yes' : 'No'}</div>
-                  <div>Stats Total: {stats.total}</div>
-                  <div>Overall Total: {overallStats.total}</div>
-                </div>
-                <div className="mt-4">
-                  <div className="font-semibold mb-2">Question Status Breakdown:</div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <div>Completed: {questions.filter(q => getQuestionStatus(q) === 'COMPLETED').length}</div>
-                    <div>In Progress: {questions.filter(q => getQuestionStatus(q) === 'IN_PROGRESS').length}</div>
-                    <div>TODO: {questions.filter(q => getQuestionStatus(q) === 'TODO').length}</div>
-                    <div>With Progress: {questions.filter(q => q.progress && q.progress.length > 0).length}</div>
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <div className="font-semibold mb-2">Overall Stats:</div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <div>Total: {overallStats.total}</div>
-                    <div>Completed: {overallStats.completed}</div>
-                    <div>In Progress: {overallStats.inProgress}</div>
-                    <div>Percentage: {overallStats.completionPercentage}%</div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+
 
           {/* Questions List */}
           <ScrollArea className="h-[600px]">
