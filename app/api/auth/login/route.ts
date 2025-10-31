@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     // Forward the request to auth service
-    const response = await fetch(`${AUTH_SERVICE_URL}/api/auth/register`, {
+    const response = await fetch(`${AUTH_SERVICE_URL}/api/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
-    console.error("Registration proxy error:", error);
+    console.error("Login proxy error:", error);
     return NextResponse.json(
       { error: "Failed to connect to auth service" },
       { status: 503 }
